@@ -3,20 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  FaChevronDown,
-  FaCodepen,
-  FaComments,
-  FaQuestionCircle,
-  FaTrophy,
-} from "react-icons/fa";
-import { MdAddBox, MdNotifications } from "react-icons/md";
-import { SiGoogleclassroom } from "react-icons/si";
+  MdAccountCircle,
+  MdDashboard,
+  MdFormatListBulleted,
+  MdChat,
+} from "react-icons/md";
+import { BsCart3 } from "react-icons/bs";
+import { FiHelpCircle } from "react-icons/fi";
 import {
-  TbLayoutDashboardFilled,
   TbLayoutSidebarLeftCollapseFilled,
   TbLayoutSidebarLeftExpandFilled,
 } from "react-icons/tb";
-import { FiMap, FiHelpCircle } from "react-icons/fi";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -57,7 +54,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   return (
     <div className="flex flex-row">
       <div
-        className={`fixed top-20 left-0 h-full dark-600 z-50 shadow-2xl transition-all duration-300 ${
+        className={`fixed top-20 left-0 h-full bg-sky-50 z-50 shadow-2xl transition-all duration-300 ${
           isOpen ? "w-56" : "w-14"
         }`}
       >
@@ -66,27 +63,27 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             isOpen ? "p-4 pr-12 space-y-2" : "px-2 pt-14 space-y-6"
           }`}
         >
-          {/* Main Navigation */}
+          {/* Section 1 - Dashboard */}
           <div
             className={`${
-              isOpen ? "space-y-2 pb-4 border-b border-gray-200" : "space-y-6"
+              isOpen ? "space-y-2 pb-4 border-b border-sky-200" : "space-y-6"
             }`}
           >
             <Link
-              href="/"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
+              href="/dashboard"
+              className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
               title="Dashboard"
             >
-              <TbLayoutDashboardFilled
+              <MdDashboard
                 className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
                   isOpen ? "mr-2 text-xl" : "text-2xl"
                 }`}
               />
               {!isOpen && (
                 <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
+                  <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
                     Dashboard
                   </div>
                 </div>
@@ -101,28 +98,28 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             </Link>
           </div>
 
-          {/* Learning Section */}
+          {/* Section 2 - Listing & Orders */}
           <div
             className={`${
-              isOpen ? "space-y-2 py-4 border-b border-gray-200" : "space-y-6"
+              isOpen ? "space-y-2 py-4 border-b border-sky-200" : "space-y-6"
             }`}
           >
             <Link
-              href="/upload"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
+              href="/mylisting"
+              className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
-              title="Upload"
+              title="My Listing"
             >
-              <SiGoogleclassroom
+              <MdFormatListBulleted
                 className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
                   isOpen ? "mr-2 text-xl" : "text-2xl"
                 }`}
               />
               {!isOpen && (
                 <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
-                    Upload
+                  <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
+                    My Listing
                   </div>
                 </div>
               )}
@@ -131,25 +128,26 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                   isOpen ? "opacity-100" : "opacity-0 w-0"
                 }`}
               >
-                {isOpen && "Upload"}
+                {isOpen && "My Listing"}
               </span>
             </Link>
+
             <Link
-              href="/roadmaps"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
+              href="/orders"
+              className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
-              title="Roadmaps"
+              title="My Orders"
             >
-              <FiMap
+              <BsCart3
                 className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
                   isOpen ? "mr-2 text-xl" : "text-2xl"
                 }`}
               />
               {!isOpen && (
                 <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
-                    Roadmaps
+                  <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
+                    My Orders
                   </div>
                 </div>
               )}
@@ -158,33 +156,33 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                   isOpen ? "opacity-100" : "opacity-0 w-0"
                 }`}
               >
-                {isOpen && "Roadmaps"}
+                {isOpen && "My Orders"}
               </span>
             </Link>
           </div>
 
-          {/* Interactive Section */}
+          {/* Section 3 - My Chats */}
           <div
             className={`${
-              isOpen ? "space-y-2 py-4 border-b border-gray-200" : "space-y-6"
+              isOpen ? "space-y-2 py-4 border-b border-sky-200" : "space-y-6"
             }`}
           >
             <Link
-              href="/playground"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
+              href="/chats"
+              className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
-              title="Playground"
+              title="My Chats"
             >
-              <FaCodepen
+              <MdChat
                 className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
                   isOpen ? "mr-2 text-xl" : "text-2xl"
                 }`}
               />
               {!isOpen && (
                 <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
-                    Playground
+                  <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
+                    My Chats
                   </div>
                 </div>
               )}
@@ -193,78 +191,44 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                   isOpen ? "opacity-100" : "opacity-0 w-0"
                 }`}
               >
-                {isOpen && "Playground"}
-              </span>
-            </Link>
-            <Link
-              href="/dev-discuss"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
-                !isOpen ? "p-1.5 justify-center" : "p-2"
-              } transition-all duration-300 relative group`}
-              title="DevDiscuss"
-            >
-              <FaComments
-                className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
-                  isOpen ? "mr-2 text-xl" : "text-2xl"
-                }`}
-              />
-              {!isOpen && (
-                <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
-                    DevDiscuss
-                  </div>
-                </div>
-              )}
-              <span
-                className={`transition-all duration-300 ${
-                  isOpen ? "opacity-100" : "opacity-0 w-0"
-                }`}
-              >
-                {isOpen && "DevDiscuss"}
+                {isOpen && "My Chats"}
               </span>
             </Link>
           </div>
 
-          {/* Achievement Section */}
-          <div
-            className={`${
-              isOpen ? "space-y-2 py-4 border-b border-gray-200" : "space-y-6"
-            }`}
-          >
-            <Link
-              href="/quests"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
-                !isOpen ? "p-1.5 justify-center" : "p-2"
-              } transition-all duration-300 relative group`}
-              title="Quests"
-            >
-              <FaTrophy
-                className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
-                  isOpen ? "mr-2 text-xl" : "text-2xl"
-                }`}
-              />
-              {!isOpen && (
-                <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
-                    Quests
-                  </div>
-                </div>
-              )}
-              <span
-                className={`transition-all duration-300 ${
-                  isOpen ? "opacity-100" : "opacity-0 w-0"
-                }`}
-              >
-                {isOpen && "Quests"}
-              </span>
-            </Link>
-          </div>
-
-          {/* Help Section */}
+          {/* Section 4 - Account & FAQ */}
           <div className={`${isOpen ? "space-y-2 pt-4" : "space-y-6"}`}>
             <Link
+              href="/account"
+              className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
+                !isOpen ? "p-1.5 justify-center" : "p-2"
+              } transition-all duration-300 relative group`}
+              title="Account"
+            >
+              <MdAccountCircle
+                className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
+                  isOpen ? "mr-2 text-xl" : "text-2xl"
+                }`}
+              />
+              {!isOpen && (
+                <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
+                  <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
+                    Account
+                  </div>
+                </div>
+              )}
+              <span
+                className={`transition-all duration-300 ${
+                  isOpen ? "opacity-100" : "opacity-0 w-0"
+                }`}
+              >
+                {isOpen && "Account"}
+              </span>
+            </Link>
+
+            <Link
               href="/faq"
-              className={`flex items-center text-gray-900 hover:text-indigo-600 hover:bg-white rounded-lg ${
+              className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
               title="Help & FAQ"
@@ -276,7 +240,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               />
               {!isOpen && (
                 <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
-                  <div className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium whitespace-nowrap">
+                  <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium whitespace-nowrap">
                     Help & FAQ
                   </div>
                 </div>
@@ -296,14 +260,14 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           {!isOpen ? (
             <button
               onClick={toggleSidebar}
-              className="text-indigo-900 hover:text-indigo-700 rounded-lg p-0.5"
+              className="text-sky-700 hover:text-sky-500 rounded-lg p-0.5"
             >
               <TbLayoutSidebarLeftExpandFilled className="text-2xl min-w-[24px] min-h-[24px]" />
             </button>
           ) : (
             <button
               onClick={toggleSidebar}
-              className="text-indigo-200 hover:text-indigo-700 rounded-lg p-0.5"
+              className="text-sky-700 hover:text-sky-500 rounded-lg p-0.5"
             >
               <TbLayoutSidebarLeftCollapseFilled className="text-2xl min-w-[24px] min-h-[24px]" />
             </button>

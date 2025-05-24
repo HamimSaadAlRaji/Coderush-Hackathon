@@ -66,21 +66,21 @@ export default function Hero() {
             <div className="mt-8 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 transition-all duration-1000 delay-700 ease-in-out">
               <div className="flex -space-x-2">
                 <Image
-                  src=""
+                  src="https://scontent.fdac2-1.fna.fbcdn.net/v/t39.30808-1/434551686_1575643826557251_2894847690793064110_n.jpg?stp=c271.170.429.428a_dst-jpg_s428x428_tt6&_nc_cat=110&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeEljXkLkgGD6R3kersUVbpqELfDMyTNBe8Qt8MzJM0F7yZYYxoOrPevSxv9yOIVUn-x6HKIiaelDQUifkCQESpY&_nc_ohc=ulgFOrqeaYIQ7kNvwExA6dr&_nc_oc=AdmGYN4ip90eureZgTtLgyPYKez5hhxeQfUB_TxudNk-VDdChNNfcwvPCUEokfMsg7M&_nc_zt=24&_nc_ht=scontent.fdac2-1.fna&_nc_gid=K1VX7HfIQqHBpWOn0avsDA&oh=00_AfJEvZ8Y6PFyCGjcJ26HiQBmMzEiEso4yt1zhiuOmvyPbw&oe=68373F7E"
                   alt="User"
                   width={32}
                   height={32}
                   className="rounded-full border-2 border-white dark:border-gray-900"
                 />
                 <Image
-                  src=""
+                  src="https://scontent.fdac2-2.fna.fbcdn.net/v/t39.30808-6/494676732_1719271838676073_9176152075671512278_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHbsUBy6KerBRxddf7VINb09xue0h0kfu73G57SHSR-7n8O9QS9L8Siv2yPXWN8A4iPvZGE3uZpQFrOzWgmVbG4&_nc_ohc=n1hNr4kBqZ8Q7kNvwHp2Yxu&_nc_oc=AdlROdfRWGccPYa5_jm1SurGErDLEg1KPVwKo66pDeMTMO6eUC4PqzHci_LLpaCSSA8&_nc_zt=23&_nc_ht=scontent.fdac2-2.fna&_nc_gid=hZPWr-6ll-ImukQ-iPls6w&oh=00_AfIMxJIDmgR-ocMiIKgSKSWfuQOY_DSYaIc4ufYtqvlhbw&oe=683727A6"
                   alt="User"
                   width={32}
                   height={32}
                   className="rounded-full border-2 border-white dark:border-gray-900"
                 />
                 <Image
-                  src=""
+                  src="https://scontent.fdac2-2.fna.fbcdn.net/v/t39.30808-1/473711139_580222511441183_3280579709863055323_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=101&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeFG1JxTHRWInhQX6CevoN2yo64Dta0U2RyjrgO1rRTZHA0w_tH9_Fl3xLYGKRGZyuOTYYGxsLW284jb7WecyeZB&_nc_ohc=D1g1w4JCgXAQ7kNvwEsm4IZ&_nc_oc=Adnc5MuRbkVRb6RHAZuKrt0B-17jJS_RQybLtQ8pYsyi3IVvfdZrqXIo0TS2vGyo9EM&_nc_zt=24&_nc_ht=scontent.fdac2-2.fna&_nc_gid=JYj9yOZzJMvmd4fbzt1Ogg&oh=00_AfJ6M2LarkZqWt1A3gSIvq3VwdB3mycBg-lhRL1bUxAChQ&oe=68374232"
                   alt="User"
                   width={32}
                   height={32}
