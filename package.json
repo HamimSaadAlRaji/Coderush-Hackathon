@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.20.0",
     "@google-cloud/vision": "^5.1.0",
     "@heroicons/react": "^2.2.0",
     "@lottiefiles/dotlottie-react": "^0.13.5",
