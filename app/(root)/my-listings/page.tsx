@@ -5,8 +5,23 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { TbPackage, TbShoppingBag, TbPlus, TbTrash, TbEdit } from "react-icons/tb";
+import { motion, AnimatePresence } from "motion/react";
+import { 
+  TbPackage, 
+  TbShoppingBag, 
+  TbPlus, 
+  TbTrash, 
+  TbEdit,
+  TbCalendar,
+  TbTag,
+  TbCurrencyDollar,
+  TbEye,
+  TbPhoto,
+  TbClockHour4,
+  TbCheck,
+  TbX,
+  TbAlertTriangle
+} from "react-icons/tb";
 import { IListing } from "@/models/Listing";
 
 export default function MyListingsPage() {
@@ -63,7 +78,7 @@ export default function MyListingsPage() {
         throw new Error(result.error || 'Failed to delete listing');
       }
 
-      if (result.success) {        // Remove the listing from state
+      if (result.success) {
         setListings(listings.filter(listing => String(listing._id) !== listingId));
         alert('Listing deleted successfully');
       } else {
@@ -75,11 +90,45 @@ export default function MyListingsPage() {
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <TbCheck className="text-green-600" />;
+      case 'sold':
+        return <TbShoppingBag className="text-blue-600" />;
+      case 'expired':
+        return <TbClockHour4 className="text-yellow-600" />;
+      case 'removed':
+        return <TbX className="text-gray-600" />;
+      default:
+        return <TbAlertTriangle className="text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'sold':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'expired':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'removed':
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
   if (!isLoaded || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="rounded-full h-12 w-12 border-b-2 border-blue-600"
+          />
         </div>
       </div>
     );
@@ -88,10 +137,15 @@ export default function MyListingsPage() {
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <TbShoppingBag className="mx-auto text-gray-400 text-6xl mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h1>
           <p className="text-gray-600">You need to be signed in to view your listings.</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -99,16 +153,21 @@ export default function MyListingsPage() {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <TbAlertTriangle className="mx-auto text-red-500 text-6xl mb-4" />
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchMyListings}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Try Again
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -116,126 +175,274 @@ export default function MyListingsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center md:justify-between mb-8"
+      >
         <div className="mb-4 md:mb-0">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <TbShoppingBag className="mr-2 text-blue-600" />
+            <TbShoppingBag className="mr-3 text-blue-600" />
             My Listings
           </h1>
-          <p className="text-gray-600 mt-1">
-            Manage your marketplace listings
+          <p className="text-gray-600 mt-1 flex items-center">
+            <TbPackage className="mr-2 text-sm" />
+            Manage your marketplace listings ({listings.length} total)
           </p>
         </div>
-        <Link
-          href="/create-listings"
-          className="bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit"
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <TbPlus className="text-lg" />
-          <span>Create New Listing</span>
-        </Link>
-      </div>
-
-      {/* Listings Grid */}
-      {listings.length === 0 ? (
-        <div className="text-center py-12">
-          <TbPackage className="mx-auto text-gray-400 text-6xl mb-4" />
-          <h3 className="text-xl font-medium text-gray-900 mb-2">No listings yet</h3>
-          <p className="text-gray-600 mb-6">Start selling by creating your first listing!</p>
           <Link
             href="/create-listings"
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit shadow-lg hover:shadow-xl"
           >
-            <TbPlus className="mr-2" />
-            Create Your First Listing
+            <TbPlus className="text-lg" />
+            <span>Create New Listing</span>
           </Link>
-        </div>
-      ) : (        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {listings.map((listing) => (
-            <motion.div
-              key={String(listing._id)}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push(`/product/${String(listing._id)}`)}
+        </motion.div>
+      </motion.div>
+
+      {/* Listings */}
+      {listings.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-16 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl border border-gray-200"
+        >
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <TbPackage className="mx-auto text-gray-400 text-8xl mb-6" />
+          </motion.div>
+          <h3 className="text-2xl font-medium text-gray-900 mb-3">No listings yet</h3>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            Start your marketplace journey by creating your first listing and reach thousands of potential buyers!
+          </p>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Link
+              href="/create-listings"
+              className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
             >
-              {/* Image */}
-              <div className="relative h-48 bg-gray-200">
-                {listing.images.length > 0 ? (
-                  <Image
-                    src={listing.images[0]}
-                    alt={listing.title}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <TbPackage className="text-gray-400 text-4xl" />
+              <TbPlus className="mr-2 text-lg" />
+              Create Your First Listing
+            </Link>
+          </motion.div>
+        </motion.div>
+      ) : (
+        <div className="space-y-4">
+          {/* Table Header */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 bg-gray-50 rounded-lg font-medium text-gray-700 text-sm border"
+          >
+            <div className="col-span-4 flex items-center">
+              <TbPhoto className="mr-2" />
+              Product
+            </div>
+            <div className="col-span-2 flex items-center">
+              <TbTag className="mr-2" />
+              Category
+            </div>
+            <div className="col-span-1 flex items-center">
+              <TbCurrencyDollar className="mr-2" />
+              Price
+            </div>
+            <div className="col-span-2 flex items-center">
+              <TbCheck className="mr-2" />
+              Status
+            </div>
+            <div className="col-span-2 flex items-center">
+              <TbCalendar className="mr-2" />
+              Created
+            </div>
+            <div className="col-span-1 text-center">Actions</div>
+          </motion.div>
+
+          {/* Listings Rows */}
+          <AnimatePresence>
+            {listings.map((listing, index) => (
+              <motion.div
+                key={String(listing._id)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                className="bg-white rounded-lg shadow-md border border-gray-200 hover:border-blue-300 transition-all duration-300 cursor-pointer overflow-hidden"
+                onClick={() => router.push(`/product/${String(listing._id)}`)}
+              >
+                {/* Mobile Layout */}
+                <div className="md:hidden p-4 space-y-4">
+                  <div className="flex space-x-4">
+                    <div className="relative w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                      {listing.images.length > 0 ? (
+                        <Image
+                          src={listing.images[0]}
+                          alt={listing.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <TbPackage className="text-gray-400 text-2xl" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                        {listing.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-1">
+                        {listing.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-gray-900">
+                          ${listing.price.toFixed(2)}
+                        </span>
+                        <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(listing.status)}`}>
+                          {getStatusIcon(listing.status)}
+                          <span className="ml-1 capitalize">{listing.status}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
-                
-                {/* Status Badge */}
-                <div className="absolute top-3 left-3">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${{
-                      active: 'bg-green-100 text-green-800',
-                      sold: 'bg-blue-100 text-blue-800',
-                      expired: 'bg-yellow-100 text-yellow-800',
-                      removed: 'bg-gray-100 text-gray-800',
-                    }[listing.status] || 'bg-gray-100 text-gray-800'}`}
-                  >
-                    {listing.status}
-                  </span>
-                </div>
-              </div>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span className="flex items-center">
+                      <TbTag className="mr-1" />
+                      {listing.category}
+                    </span>
+                    <span className="flex items-center">
+                      <TbCalendar className="mr-1" />
+                      {new Date(listing.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
 
-              {/* Content */}
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {listing.title}
-                </h3>
-                
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {listing.description}
-                </p>
-
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-lg font-bold text-gray-900">
-                    ${listing.price.toFixed(2)}
-                  </span>
-                  <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {listing.category}
-                  </span>
+                  <div className="flex space-x-2 pt-2 border-t">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        /* TODO: Implement edit functionality */
+                      }}
+                      className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    >
+                      <TbEdit className="mr-1" />
+                      Edit
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteListing(String(listing._id));
+                      }}
+                      className="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center"
+                    >
+                      <TbTrash />
+                    </motion.button>
+                  </div>
                 </div>
 
-                <div className="text-xs text-gray-500 mb-3">
-                  Created: {new Date(listing.createdAt).toLocaleDateString()}
-                </div>
+                {/* Desktop Layout */}
+                <div className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 items-center">
+                  {/* Product Info */}
+                  <div className="col-span-4 flex items-center space-x-4">
+                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                      {listing.images.length > 0 ? (
+                        <Image
+                          src={listing.images[0]}
+                          alt={listing.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <TbPackage className="text-gray-400 text-xl" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
+                        {listing.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm line-clamp-1">
+                        {listing.description}
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent card click when clicking edit
-                      /* TODO: Implement edit functionality */
-                    }}
-                    className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
-                  >
-                    <TbEdit className="mr-1" />
-                    Edit
-                  </button>                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent card click when clicking delete
-                      handleDeleteListing(String(listing._id));
-                    }}
-                    className="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center"
-                  >
-                    <TbTrash />
-                  </button>
+                  {/* Category */}
+                  <div className="col-span-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                      <TbTag className="mr-1 text-xs" />
+                      {listing.category}
+                    </span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="col-span-1">
+                    <span className="text-lg font-bold text-gray-900 flex items-center">
+                      <TbCurrencyDollar className="mr-1 text-green-600" />
+                      {listing.price.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-2">
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(listing.status)}`}>
+                      {getStatusIcon(listing.status)}
+                      <span className="ml-2 capitalize">{listing.status}</span>
+                    </div>
+                  </div>
+
+                  {/* Created Date */}
+                  <div className="col-span-2 text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <TbCalendar className="mr-2" />
+                      {new Date(listing.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-1 flex space-x-2 justify-center">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        /* TODO: Implement edit functionality */
+                      }}
+                      className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      title="Edit listing"
+                    >
+                      <TbEdit className="text-sm" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteListing(String(listing._id));
+                      }}
+                      className="p-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                      title="Delete listing"
+                    >
+                      <TbTrash className="text-sm" />
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </div>
