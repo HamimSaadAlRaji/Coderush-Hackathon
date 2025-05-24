@@ -47,7 +47,11 @@ export default function ConversationPage() {
     });
 
     socketInstance.on("receive-message", (newMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
+      // Only add message if it's not from the current user
+      // (to avoid duplicates since we already add it locally in sendMessage)
+      if (newMessage.senderId._id !== user?.id) {
+        setMessages((prev) => [...prev, newMessage]);
+      }
     });
 
     setSocket(socketInstance);
@@ -55,7 +59,7 @@ export default function ConversationPage() {
     return () => {
       socketInstance.disconnect();
     };
-  }, [conversationId]);
+  }, [conversationId, user?.id]);
 
   useEffect(() => {
     if (user) {
@@ -128,10 +132,16 @@ export default function ConversationPage() {
 
       if (response.ok) {
         const newMessage = await response.json();
+        
+        // Add to local state immediately for the sender to see their message
         setMessages((prev) => [...prev, newMessage]);
-
+        
+        // Emit to socket for other participants
         if (socket) {
-          socket.emit("send-message", newMessage);
+          socket.emit("send-message", {
+            ...newMessage,
+            conversationId: conversationId
+          });
         }
 
         fetchConversations(); // Update last message in sidebar

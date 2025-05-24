@@ -13,11 +13,11 @@ export async function GET(request: NextRequest) {
     }
 
     const conversations = await ConversationModel.find({
-      participants: { $in: [userId] }, // Use $in to find conversations where userId is in the participants array
+      participants: { $in: [userId] },
     })
       .populate("listingId", "title images")
       .sort({ lastMessageAt: -1 })
-      .lean(); // Use lean() for better performance
+      .lean();
 
     // Manually populate participant info since we're using Clerk IDs
     const conversationsWithParticipants = await Promise.all(
@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
         const participantInfo = await Promise.all(
           participantIds.map(async (id) => {
             try {
-              // Fetch user info from your users API
               const response = await fetch(
                 `${process.env.NEXT_PUBLIC_APP_URL}/api/users?clerkId=${id}`
               );
@@ -76,94 +75,64 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// POST handler for creating new conversations
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const { userId } = await auth();
-
+    
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { sellerId, listingId, buyerId } = await request.json();
+    const { listingId, sellerId, buyerId } = await request.json();
 
-    console.log("Creating conversation:", { userId, sellerId, listingId, buyerId });
-
-    // Use buyerId if provided, otherwise use userId
-    const actualBuyerId = buyerId || userId;
-
-    // Validate input
-    if (!sellerId) {
-      return NextResponse.json(
-        { error: "Seller ID is required" },
-        { status: 400 }
-      );
+    // Validate required fields
+    if (!listingId || !sellerId || !buyerId) {
+      return NextResponse.json({ 
+        error: 'Missing required fields: listingId, sellerId, buyerId' 
+      }, { status: 400 });
     }
-
-    if (!listingId) {
-      return NextResponse.json(
-        { error: "Listing ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Ensure sellerId and buyerId are strings
-    const buyerIdStr = String(actualBuyerId);
-    const sellerIdStr = String(sellerId);
 
     // Check if conversation already exists
     const existingConversation = await ConversationModel.findOne({
-      participants: { $all: [buyerIdStr, sellerIdStr] },
-      listingId: listingId,
-    }).populate("listingId", "title images");
+      listingId,
+      participants: { $all: [sellerId, buyerId] }
+    });
 
     if (existingConversation) {
-      console.log("Found existing conversation:", existingConversation._id);
       return NextResponse.json({
         success: true,
-        data: {
-          _id: existingConversation._id,
-          participants: existingConversation.participants,
-          listingId: existingConversation.listingId,
-          lastMessage: existingConversation.lastMessage,
-          lastMessageAt: existingConversation.lastMessageAt,
-        },
+        data: existingConversation,
+        message: 'Conversation already exists'
       });
     }
 
-    // Create new conversation with string participants
+    // Create new conversation
     const conversation = new ConversationModel({
-      participants: [buyerIdStr, sellerIdStr],
-      listingId: listingId,
-      lastMessage: "",
-      lastMessageAt: new Date(),
+      listingId,
+      participants: [sellerId, buyerId],
+      lastMessage: '',
+      lastMessageAt: new Date()
     });
 
     await conversation.save();
 
-    // Populate the listing data
-    await conversation.populate("listingId", "title images");
-
-    console.log("Conversation created successfully:", conversation._id);
+    // Populate the listing data for response
+    const populatedConversation = await ConversationModel.findById(conversation._id)
+      .populate('listingId', 'title images')
+      .lean();
 
     return NextResponse.json({
       success: true,
-      data: {
-        _id: conversation._id,
-        participants: conversation.participants,
-        listingId: conversation.listingId,
-        lastMessage: conversation.lastMessage,
-        lastMessageAt: conversation.lastMessageAt,
-      },
+      data: populatedConversation,
+      message: 'Conversation created successfully'
     });
+
   } catch (error) {
-    console.error("Error creating conversation:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    console.error('Error creating conversation:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error' 
+    }, { status: 500 });
   }
 }
