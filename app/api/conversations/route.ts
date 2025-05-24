@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
                     _id: id,
                     name: `${result.data.firstName} ${result.data.lastName}`,
                     email: result.data.email,
-                    image: result.data.image,
+                    image: result.data.profilePicture,
                   };
                 }
               }

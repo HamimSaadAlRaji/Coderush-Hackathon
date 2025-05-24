@@ -10,28 +10,26 @@ export async function GET(
   try {
     await dbConnect();
     const { userId } = await auth();
-    
+
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Await params before using
     const { id } = await params;
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const skip = (page - 1) * limit;
+    // Verify user is part of this conversation
+    const conversation = await ConversationModel.findById(id);
+    if (!conversation || !conversation.participants.includes(userId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const messages = await MessageModel.find({
-      conversationId: id
-    })
-    .sort({ createdAt: 1 }) // Ascending order for chat
-    .skip(skip)
-    .limit(limit)
-    .lean();
+    // Fetch messages for this specific conversation
+    const messages = await MessageModel.find({ conversationId: id })
+      .sort({ createdAt: 1 })
+      .lean();
 
-    // Manually populate sender info since we're using Clerk IDs
+    // Populate sender info for each message
     const messagesWithSenderInfo = await Promise.all(
       messages.map(async (message) => {
         try {
@@ -45,7 +43,7 @@ export async function GET(
                   _id: message.senderId,
                   name: `${result.data.firstName} ${result.data.lastName}`,
                   email: result.data.email,
-                  image: result.data.image
+                  image: result.data.profilePicture || null
                 }
               };
             }
@@ -60,6 +58,7 @@ export async function GET(
             }
           };
         } catch (error) {
+          console.error(`Error fetching user ${message.senderId}:`, error);
           return {
             ...message,
             senderId: {
@@ -75,8 +74,11 @@ export async function GET(
 
     return NextResponse.json(messagesWithSenderInfo);
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error fetching messages:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -150,7 +152,7 @@ export async function POST(
               _id: userId,
               name: `${result.data.firstName} ${result.data.lastName}`,
               email: result.data.email,
-              image: result.data.image
+              image: result.data.profilePicture || null
             }
           };
           return NextResponse.json(messageWithSender);
