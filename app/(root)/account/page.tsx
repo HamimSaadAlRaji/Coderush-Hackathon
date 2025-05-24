@@ -12,36 +12,30 @@ import {
   TbShield,
   TbListCheck,
   TbUserCircle,
-  TbCheckbox,
+  TbX,
+  TbCheck,
   TbInfoCircle,
   TbEdit,
 } from "react-icons/tb";
 import { FaGraduationCap } from "react-icons/fa";
 import Image from "next/image";
 
-// Mock verification status
-const VERIFICATION_STATUS = {
-  EMAIL: "verified",
-  PHONE: "verified",
-  ACADEMIC: "pending",
-};
-
 export default function AccountPage() {
   const { isLoaded, user } = useUser();
 
-  // Form state
+  // Form state - all fields start empty
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    university: "Stanford University",
-    department: "Computer Science",
-    program: "Bachelor of Science",
-    yearOfStudy: "3rd Year",
-    phoneNumber: "+1 (555) 123-4567",
-    publicProfile: true,
-    showUniversity: true,
-    showDepartment: true,
-    showProgram: true,
-    showYearOfStudy: true,
+    university: "",
+    department: "",
+    program: "",
+    yearOfStudy: "",
+    phoneNumber: "",
+    publicProfile: false,
+    showUniversity: false,
+    showDepartment: false,
+    showProgram: false,
+    showYearOfStudy: false,
   });
 
   // Loading state UI
@@ -67,6 +61,39 @@ export default function AccountPage() {
     console.log("Saving profile data:", formData);
     setIsEditing(false);
   };
+
+  // Calculate completion percentage based on filled fields
+  const calculateCompletionPercentage = () => {
+    const fields = [
+      "university",
+      "department", 
+      "program",
+      "yearOfStudy",
+      "phoneNumber",
+    ];
+    const filledFields = fields.filter(
+      (field) => formData[field].trim() !== ""
+    ).length;
+    return Math.round((filledFields / fields.length) * 100);
+  };
+
+  // Check verification status based on filled data
+  const getVerificationStatus = () => {
+    const hasPhoneNumber = formData.phoneNumber.trim() !== "";
+    const hasAcademicInfo = formData.university.trim() !== "" && 
+                           formData.department.trim() !== "" && 
+                           formData.program.trim() !== "" && 
+                           formData.yearOfStudy.trim() !== "";
+    
+    return {
+      email: "verified", // Always verified
+      phone: hasPhoneNumber ? "verified" : "unverified",
+      academic: hasAcademicInfo ? "verified" : "unverified"
+    };
+  };
+
+  const completionPercentage = calculateCompletionPercentage();
+  const verificationStatus = getVerificationStatus();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -138,44 +165,78 @@ export default function AccountPage() {
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                  <TbShield className="mr-2 text-green-600" /> Verification
-                  Status
+                  <TbShield className={`mr-2 ${verificationStatus.email === 'verified' && verificationStatus.phone === 'verified' && verificationStatus.academic === 'verified' ? 'text-green-500' : 'text-orange-500'}`} /> Verification Status
                 </h3>
                 <div className="space-y-3">
+                  {/* Email - Always Verified */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                      <TbCheckbox className="mr-2" /> Email
+                      <TbCheck className="mr-2 text-green-500" /> Email
                     </span>
                     <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
                       Verified
                     </span>
                   </div>
+                  
+                  {/* Phone - Verified when phone number is provided */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                      <TbCheckbox className="mr-2" /> Phone
+                      {verificationStatus.phone === 'verified' ? (
+                        <TbCheck className="mr-2 text-green-500" />
+                      ) : (
+                        <TbX className="mr-2 text-red-500" />
+                      )} Phone
                     </span>
-                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                      Verified
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      verificationStatus.phone === 'verified' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {verificationStatus.phone === 'verified' ? 'Verified' : 'Unverified'}
                     </span>
                   </div>
+                  
+                  {/* Academic - Verified when all academic fields are filled */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                      <TbCheckbox className="mr-2" /> Academic Profile
+                      {verificationStatus.academic === 'verified' ? (
+                        <TbCheck className="mr-2 text-green-500" />
+                      ) : (
+                        <TbX className="mr-2 text-red-500" />
+                      )} Academic Profile
                     </span>
-                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
-                      Pending
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      verificationStatus.academic === 'verified' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {verificationStatus.academic === 'verified' ? 'Verified' : 'Unverified'}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 text-sm">
+                <div className={`rounded-lg p-4 text-sm ${
+                  verificationStatus.phone === 'verified' && verificationStatus.academic === 'verified'
+                    ? 'bg-green-50 dark:bg-green-900/30'
+                    : 'bg-orange-50 dark:bg-orange-900/30'
+                }`}>
                   <div className="flex items-start">
-                    <TbInfoCircle className="text-blue-600 mr-2 mt-1 flex-shrink-0" />
-                    <p className="text-blue-800 dark:text-blue-200">
-                      A complete academic profile increases your trustworthiness
-                      and visibility in the marketplace.
+                    <TbInfoCircle className={`mr-2 mt-1 flex-shrink-0 ${
+                      verificationStatus.phone === 'verified' && verificationStatus.academic === 'verified'
+                        ? 'text-green-600'
+                        : 'text-orange-600'
+                    }`} />
+                    <p className={
+                      verificationStatus.phone === 'verified' && verificationStatus.academic === 'verified'
+                        ? 'text-green-800 dark:text-green-200'
+                        : 'text-orange-800 dark:text-orange-200'
+                    }>
+                      {verificationStatus.phone === 'verified' && verificationStatus.academic === 'verified'
+                        ? 'Great! Your profile is fully verified. This helps build trust with other students in the marketplace.'
+                        : 'Complete your profile and verify your information to build trust and increase your visibility in the marketplace.'
+                      }
                     </p>
                   </div>
                 </div>
@@ -223,6 +284,9 @@ export default function AccountPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                       <TbSchool className="mr-2 text-blue-600" /> University
+                      {formData.university && (
+                        <TbCheck className="ml-2 text-green-500 text-xs" />
+                      )}
                     </label>
                     {isEditing ? (
                       <input
@@ -234,7 +298,7 @@ export default function AccountPage() {
                         placeholder="Enter your university"
                       />
                     ) : (
-                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500">
                         {formData.university || "Not specified"}
                       </div>
                     )}
@@ -243,8 +307,10 @@ export default function AccountPage() {
                   {/* Department */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                      <TbBuildingCommunity className="mr-2 text-blue-600" />{" "}
-                      Department
+                      <TbBuildingCommunity className="mr-2 text-blue-600" /> Department
+                      {formData.department && (
+                        <TbCheck className="ml-2 text-green-500 text-xs" />
+                      )}
                     </label>
                     {isEditing ? (
                       <input
@@ -256,7 +322,7 @@ export default function AccountPage() {
                         placeholder="Enter your department"
                       />
                     ) : (
-                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500">
                         {formData.department || "Not specified"}
                       </div>
                     )}
@@ -271,6 +337,9 @@ export default function AccountPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                       <TbBook className="mr-2 text-blue-600" /> Program of Study
+                      {formData.program && (
+                        <TbCheck className="ml-2 text-green-500 text-xs" />
+                      )}
                     </label>
                     {isEditing ? (
                       <input
@@ -282,7 +351,7 @@ export default function AccountPage() {
                         placeholder="Enter your program"
                       />
                     ) : (
-                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500">
                         {formData.program || "Not specified"}
                       </div>
                     )}
@@ -291,8 +360,10 @@ export default function AccountPage() {
                   {/* Year of Study */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                      <TbCalendar className="mr-2 text-blue-600" /> Year of
-                      Study
+                      <TbCalendar className="mr-2 text-blue-600" /> Year of Study
+                      {formData.yearOfStudy && (
+                        <TbCheck className="ml-2 text-green-500 text-xs" />
+                      )}
                     </label>
                     {isEditing ? (
                       <select
@@ -310,7 +381,7 @@ export default function AccountPage() {
                         <option value="Graduate">Graduate</option>
                       </select>
                     ) : (
-                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500">
                         {formData.yearOfStudy || "Not specified"}
                       </div>
                     )}
@@ -322,6 +393,9 @@ export default function AccountPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                       <TbPhone className="mr-2 text-blue-600" /> Phone Number
+                      {formData.phoneNumber && (
+                        <TbCheck className="ml-2 text-green-500 text-xs" />
+                      )}
                     </label>
                     {isEditing ? (
                       <input
@@ -333,21 +407,21 @@ export default function AccountPage() {
                         placeholder="Enter your phone number"
                       />
                     ) : (
-                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500">
                         {formData.phoneNumber || "Not specified"}
                       </div>
                     )}
                   </div>
                 </motion.div>
 
+                {/* Rest of the form components remain the same... */}
                 {isEditing && (
                   <motion.div
                     variants={itemVariants}
                     className="border-t border-gray-200 dark:border-gray-700 pt-6"
                   >
                     <h3 className="text-lg font-medium mb-4 flex items-center">
-                      <TbListCheck className="mr-2 text-blue-600" /> Privacy
-                      Settings
+                      <TbListCheck className="mr-2 text-blue-600" /> Privacy Settings
                     </h3>
 
                     <div className="space-y-3">
@@ -484,28 +558,61 @@ export default function AccountPage() {
                 variants={itemVariants}
                 initial="hidden"
                 animate="visible"
-                className="mt-8 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-lg p-4"
+                className={`mt-8 border rounded-lg p-4 ${
+                  completionPercentage === 100
+                    ? 'bg-green-50 dark:bg-green-900/30 border-green-100 dark:border-green-800'
+                    : 'bg-orange-50 dark:bg-orange-900/30 border-orange-100 dark:border-orange-800'
+                }`}
               >
                 <div className="flex items-start">
                   <div className="flex-shrink-0 mt-0.5">
-                    <TbShield className="text-blue-600 text-lg" />
+                    <TbShield className={`text-lg ${
+                      completionPercentage === 100 ? 'text-green-600' : 'text-orange-600'
+                    }`} />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      Trust Score Impact
+                    <h3 className={`text-sm font-medium ${
+                      completionPercentage === 100 
+                        ? 'text-green-800 dark:text-green-200'
+                        : 'text-orange-800 dark:text-orange-200'
+                    }`}>
+                      Profile Completion
                     </h3>
-                    <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                    <div className={`mt-2 text-sm ${
+                      completionPercentage === 100
+                        ? 'text-green-700 dark:text-green-300'
+                        : 'text-orange-700 dark:text-orange-300'
+                    }`}>
                       <p>
                         Your academic profile is{" "}
-                        <span className="font-medium">75%</span> complete.
-                        Completing your profile increases your visibility in
-                        search results and builds trust with potential buyers or
-                        sellers.
+                        <span className="font-medium">
+                          {completionPercentage}%
+                        </span>{" "}
+                        complete.
+                        {completionPercentage < 100 ? (
+                          <span>
+                            {" "}
+                            Complete your profile to increase your visibility
+                            and build trust with other students.
+                          </span>
+                        ) : (
+                          <span> Great! Your profile is complete and fully verified.</span>
+                        )}
                       </p>
                       <div className="mt-2 bg-white dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
                         <div
-                          className="bg-blue-600 h-2.5 rounded-full"
-                          style={{ width: "75%" }}
+                          className={`h-2.5 rounded-full transition-all duration-500 ${
+                            completionPercentage === 0
+                              ? "bg-red-500"
+                              : completionPercentage < 50
+                              ? "bg-orange-500"
+                              : completionPercentage < 100
+                              ? "bg-yellow-500"
+                              : "bg-green-500"
+                          }`}
+                          style={{
+                            width: `${Math.max(completionPercentage, 5)}%`,
+                          }}
                         ></div>
                       </div>
                     </div>

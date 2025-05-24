@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  TbPackage, 
-  TbShoppingBag, 
-  TbPlus, 
-  TbTrash, 
+import { Skeleton } from "@heroui/react";
+import {
+  TbPackage,
+  TbShoppingBag,
+  TbPlus,
+  TbTrash,
   TbEdit,
   TbCalendar,
   TbTag,
@@ -20,7 +21,7 @@ import {
   TbClockHour4,
   TbCheck,
   TbX,
-  TbAlertTriangle
+  TbAlertTriangle,
 } from "react-icons/tb";
 import { IListing } from "@/models/Listing";
 
@@ -38,17 +39,17 @@ export default function MyListingsPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch listings');
+        throw new Error(result.error || "Failed to fetch listings");
       }
 
       if (result.success) {
         setListings(result.data.listings);
       } else {
-        throw new Error(result.error || 'Failed to fetch listings');
+        throw new Error(result.error || "Failed to fetch listings");
       }
     } catch (err) {
-      console.error('Error fetching listings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load listings');
+      console.error("Error fetching listings:", err);
+      setError(err instanceof Error ? err.message : "Failed to load listings");
     } finally {
       setLoading(false);
     }
@@ -63,42 +64,48 @@ export default function MyListingsPage() {
   }, [isLoaded, user, fetchMyListings]);
 
   const handleDeleteListing = async (listingId: string) => {
-    if (!confirm('Are you sure you want to delete this listing?')) {
+    if (!confirm("Are you sure you want to delete this listing?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/listings/${listingId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete listing');
+        throw new Error(result.error || "Failed to delete listing");
       }
 
       if (result.success) {
-        setListings(listings.filter(listing => String(listing._id) !== listingId));
-        alert('Listing deleted successfully');
+        setListings(
+          listings.filter((listing) => String(listing._id) !== listingId)
+        );
+        alert("Listing deleted successfully");
       } else {
-        throw new Error(result.error || 'Failed to delete listing');
+        throw new Error(result.error || "Failed to delete listing");
       }
     } catch (err) {
-      console.error('Error deleting listing:', err);
-      alert(`Error deleting listing: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error("Error deleting listing:", err);
+      alert(
+        `Error deleting listing: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active':
+      case "active":
         return <TbCheck className="text-green-600" />;
-      case 'sold':
+      case "sold":
         return <TbShoppingBag className="text-blue-600" />;
-      case 'expired':
+      case "expired":
         return <TbClockHour4 className="text-yellow-600" />;
-      case 'removed':
+      case "removed":
         return <TbX className="text-gray-600" />;
       default:
         return <TbAlertTriangle className="text-gray-600" />;
@@ -107,28 +114,122 @@ export default function MyListingsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'sold':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'expired':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'removed':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+      case "active":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "sold":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "expired":
+        return "bg-yellow-50 text-yellow-700 border-yellow-200";
+      case "removed":
+        return "bg-gray-50 text-gray-700 border-gray-200";
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
 
   if (!isLoaded || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-center items-center h-64">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="rounded-full h-12 w-12 border-b-2 border-blue-600"
-          />
+        {/* Header Skeleton */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <div className="mb-4 md:mb-0">
+            <Skeleton className="h-8 w-48 rounded-lg mb-2" />
+            <Skeleton className="h-4 w-64 rounded-lg" />
+          </div>
+          <Skeleton className="h-12 w-48 rounded-full" />
+        </div>
+
+        {/* Table Header Skeleton */}
+        <div className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 bg-gray-50 rounded-lg mb-4">
+          <div className="col-span-4">
+            <Skeleton className="h-4 w-20 rounded-lg" />
+          </div>
+          <div className="col-span-2">
+            <Skeleton className="h-4 w-16 rounded-lg" />
+          </div>
+          <div className="col-span-1">
+            <Skeleton className="h-4 w-12 rounded-lg" />
+          </div>
+          <div className="col-span-2">
+            <Skeleton className="h-4 w-14 rounded-lg" />
+          </div>
+          <div className="col-span-2">
+            <Skeleton className="h-4 w-16 rounded-lg" />
+          </div>
+          <div className="col-span-1">
+            <Skeleton className="h-4 w-16 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Listing Rows Skeleton */}
+        <div className="space-y-4">
+          {[...Array(5)].map((_, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-md border border-gray-200 p-6"
+            >
+              {/* Mobile Layout Skeleton */}
+              <div className="md:hidden space-y-4">
+                <div className="flex space-x-4">
+                  <Skeleton className="flex rounded-lg w-20 h-20" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4 rounded-lg" />
+                    <Skeleton className="h-4 w-full rounded-lg" />
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-6 w-16 rounded-lg" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-24 rounded-lg" />
+                  <Skeleton className="h-4 w-24 rounded-lg" />
+                </div>
+                <div className="flex space-x-2 pt-2 border-t">
+                  <Skeleton className="h-8 flex-1 rounded-md" />
+                  <Skeleton className="h-8 w-16 rounded-md" />
+                </div>
+              </div>
+
+              {/* Desktop Layout Skeleton */}
+              <div className="hidden md:grid md:grid-cols-12 gap-4 items-center">
+                {/* Product Info */}
+                <div className="col-span-4 flex items-center space-x-4">
+                  <Skeleton className="flex rounded-lg w-16 h-16" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4 rounded-lg" />
+                    <Skeleton className="h-3 w-full rounded-lg" />
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div className="col-span-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+
+                {/* Price */}
+                <div className="col-span-1">
+                  <Skeleton className="h-6 w-16 rounded-lg" />
+                </div>
+
+                {/* Status */}
+                <div className="col-span-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+
+                {/* Created Date */}
+                <div className="col-span-2">
+                  <Skeleton className="h-4 w-24 rounded-lg" />
+                </div>
+
+                {/* Actions */}
+                <div className="col-span-1 flex space-x-2 justify-center">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -143,8 +244,12 @@ export default function MyListingsPage() {
           className="text-center"
         >
           <TbShoppingBag className="mx-auto text-gray-400 text-6xl mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h1>
-          <p className="text-gray-600">You need to be signed in to view your listings.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Please Sign In
+          </h1>
+          <p className="text-gray-600">
+            You need to be signed in to view your listings.
+          </p>
         </motion.div>
       </div>
     );
@@ -190,10 +295,7 @@ export default function MyListingsPage() {
             Manage your marketplace listings ({listings.length} total)
           </p>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Link
             href="/create-listings"
             className="bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit shadow-lg hover:shadow-xl"
@@ -217,14 +319,14 @@ export default function MyListingsPage() {
           >
             <TbPackage className="mx-auto text-gray-400 text-8xl mb-6" />
           </motion.div>
-          <h3 className="text-2xl font-medium text-gray-900 mb-3">No listings yet</h3>
+          <h3 className="text-2xl font-medium text-gray-900 mb-3">
+            No listings yet
+          </h3>
           <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            Start your marketplace journey by creating your first listing and reach thousands of potential buyers!
+            Start your marketplace journey by creating your first listing and
+            reach thousands of potential buyers!
           </p>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link
               href="/create-listings"
               className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
@@ -274,7 +376,10 @@ export default function MyListingsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                }}
                 className="bg-white rounded-lg shadow-md border border-gray-200 hover:border-blue-300 transition-all duration-300 cursor-pointer overflow-hidden"
                 onClick={() => router.push(`/product/${String(listing._id)}`)}
               >
@@ -306,14 +411,20 @@ export default function MyListingsPage() {
                         <span className="text-lg font-bold text-gray-900">
                           ${listing.price.toFixed(2)}
                         </span>
-                        <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(listing.status)}`}>
+                        <div
+                          className={`flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                            listing.status
+                          )}`}
+                        >
                           {getStatusIcon(listing.status)}
-                          <span className="ml-1 capitalize">{listing.status}</span>
+                          <span className="ml-1 capitalize">
+                            {listing.status}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <span className="flex items-center">
                       <TbTag className="mr-1" />
@@ -398,7 +509,11 @@ export default function MyListingsPage() {
 
                   {/* Status */}
                   <div className="col-span-2">
-                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(listing.status)}`}>
+                    <div
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                        listing.status
+                      )}`}
+                    >
                       {getStatusIcon(listing.status)}
                       <span className="ml-2 capitalize">{listing.status}</span>
                     </div>
