@@ -35,18 +35,8 @@ export class PriceSuggestionChain {
           "min": number,
           "max": number,
           "average": number,
-          "currency": "USD"
-        }},
-        "marketplaceData": [
-          {{
-            "source": "string",
-            "price": number,
-            "currency": "string",
-            "condition": "string",
-            "url": "string (if available)",
-            "title": "string (if available)"
-          }}
-        ],
+          "currency": "BDT"
+        }}, 
         "confidence": "high|medium|low",
         "reasoning": "string explaining your analysis"
       }}
@@ -102,7 +92,7 @@ export class PriceSuggestionChain {
         min: 0,
         max: 0,
         average: 0,
-        currency: "USD"
+        currency: "BDT"
       },
       marketplaceData: [],
       confidence: "low",

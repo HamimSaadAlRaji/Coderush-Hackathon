@@ -32,13 +32,13 @@ export class MarketplaceSearch {
     const { product: productName, condition, usedFor } = product;
     
     const baseQueries = [
-      `${productName} ${condition} price marketplace`,
+      `${productName} ${condition} price marketplace second hand bangladesh`,
       `${productName} ${condition} for sale second hand`,
       `buy ${productName} ${condition} price range`,
     ];
 
     // Add specific marketplace searches
-    const marketplaces = ['ebay', 'facebook marketplace', 'craigslist', 'mercari', 'swappa'];
+    const marketplaces = ['bikroy.com', 'facebook marketplace', 'swap.com.bd', 'keeno.app'];
     const marketplaceQueries = marketplaces.map(marketplace => 
       `${productName} ${condition} price ${marketplace}`
     );
