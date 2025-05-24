@@ -5,7 +5,12 @@ interface Message {
   conversationId: string;
   senderId: string;
   content: string;
-  images?: string[];
+  images?: {
+    url: string;
+    publicId?: string;
+    width?: number;
+    height?: number;
+  }[];
   read: boolean;
   createdAt: Date;
 }
@@ -19,6 +24,14 @@ interface Conversation {
   createdAt: Date;
 }
 
+// Image schema for storing Cloudinary data
+const ImageSchema = new mongoose.Schema({
+  url: { type: String, required: true },
+  publicId: { type: String }, // For Cloudinary deletion if needed
+  width: { type: Number },
+  height: { type: Number },
+}, { _id: false });
+
 const MessageSchema = new mongoose.Schema(
   {
     conversationId: {
@@ -28,7 +41,7 @@ const MessageSchema = new mongoose.Schema(
     },
     senderId: { type: String, required: true }, // String for Clerk user ID
     content: { type: String, required: false, default: '' }, // Allow empty content for image-only messages
-    images: [{ type: String }],
+    images: [ImageSchema], // Array of image objects with Cloudinary data
     read: { type: Boolean, default: false },
   },
   { timestamps: true }

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Conversation, Message } from '@/models/Message';
-import MessageBubble from './MessageBubble';
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { format } from 'date-fns';
+import { TbSend, TbPhoto, TbFile } from 'react-icons/tb';
 import MessageInput from './MessageInput';
+import { Conversation, Message } from '@/models/Message';
 import { useUser } from '@clerk/nextjs';
 
 interface ChatWindowProps {
@@ -21,19 +23,92 @@ export default function ChatWindow({
 }: ChatWindowProps) {
   const { user } = useUser();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isTyping, setIsTyping] = useState(false);
-
-  const otherParticipant = conversation.participants.find(
-    (p: any) => p._id !== currentUserId
-  );
+  const [imageModal, setImageModal] = useState<{ isOpen: boolean; imageUrl: string; }>({
+    isOpen: false,
+    imageUrl: ''
+  });
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleImageClick = (imageUrl: string) => {
+    setImageModal({ isOpen: true, imageUrl });
+  };
+
+  const closeModal = () => {
+    setImageModal({ isOpen: false, imageUrl: '' });
+  };
+
+  const renderMessage = (message: any) => {
+    const isOwnMessage = message.senderId._id === currentUserId;
+    const senderName = typeof message.senderId === 'object' 
+      ? message.senderId.name 
+      : 'Unknown User';
+
+    return (
+      <div
+        key={message._id}
+        className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}
+      >
+        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+          isOwnMessage
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-900'
+        }`}>
+          {!isOwnMessage && (
+            <div className="text-xs text-gray-600 mb-1">{senderName}</div>
+          )}
+          
+          {/* Text content */}
+          {message.content && (
+            <div className="mb-2">{message.content}</div>
+          )}
+          
+          {/* Images */}
+          {message.images && message.images.length > 0 && (
+            <div className="space-y-2">
+              {message.images.map((image: any, index: number) => {
+                const imageUrl = typeof image === 'string' ? image : image.url;
+                return (
+                  <div key={index} className="relative">
+                    <Image
+                      src={imageUrl}
+                      alt={`Chat image ${index + 1}`}
+                      width={200}
+                      height={150}
+                      className="rounded-lg cursor-pointer hover:opacity-90 transition-opacity object-cover"
+                      onClick={() => handleImageClick(imageUrl)}
+                    />
+                    {/* Optional: Show image dimensions if available */}
+                    {typeof image === 'object' && image.width && image.height && (
+                      <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                        {image.width}×{image.height}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          
+          <div className={`text-xs mt-1 ${
+            isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+          }`}>
+            {format(new Date(message.createdAt), 'HH:mm')}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const otherParticipant = conversation.participants.find(
+    (p: any) => p._id !== currentUserId
+  );
 
   const getConversationTitle = () => {
     const productName = conversation.listingId?.title || 'Unknown Product';
@@ -43,113 +118,54 @@ export default function ChatWindow({
   return (
     <div className="flex-1 flex flex-col bg-white">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center space-x-4">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              {otherParticipant?.image ? (
-                <img
-                  src={otherParticipant.image}
-                  alt={otherParticipant.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-medium text-gray-600">
-                  {otherParticipant?.name?.charAt(0)?.toUpperCase() || '?'}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {getConversationTitle()}
-            </h2>
-            <div className="flex items-center space-x-2 mt-1">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-gray-500">Online</span>
-            </div>
-          </div>
-
-          {/* Product Info */}
-          {conversation.listingId && (
-            <div className="flex items-center space-x-2 bg-gray-50 px-3 py-2 rounded-lg">
-              {conversation.listingId.images?.[0] && (
-                <img
-                  src={conversation.listingId.images[0]}
-                  alt={conversation.listingId.title}
-                  className="w-8 h-8 rounded object-cover"
-                />
-              )}
-              <span className="text-sm text-gray-700 font-medium">
-                {conversation.listingId.title}
-              </span>
-            </div>
-          )}
-        </div>
+      <div className="border-b bg-white p-4">
+        <h2 className="text-lg font-semibold text-gray-900">
+          {conversation.listingId?.title || 'Chat'}
+        </h2>
+        <p className="text-sm text-gray-600">
+          {conversation.participants.length} participants
+        </p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-4xl mb-4">👋</div>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">
-                Start the conversation
-              </h3>
-              <p className="text-sm text-gray-500">
-                Send a message to begin chatting about {conversation.listingId?.title || 'this product'}
-              </p>
-            </div>
+          <div className="text-center text-gray-500 mt-8">
+            <TbPhoto className="mx-auto text-4xl mb-2" />
+            <p>No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          <>
-            {messages.map((message, index) => (
-              <MessageBubble
-                key={message._id}
-                message={message}
-                isOwn={message.senderId === currentUserId}
-                showAvatar={
-                  index === 0 ||
-                  messages[index - 1].senderId !== message.senderId
-                }
-                senderInfo={
-                  message.senderId === currentUserId
-                    ? { name: user?.firstName + ' ' + user?.lastName || 'You', image: user?.imageUrl }
-                    : { name: otherParticipant?.name || 'Unknown', image: otherParticipant?.image }
-                }
-              />
-            ))}
-            
-            {isTyping && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-medium text-gray-600">
-                    {otherParticipant?.name?.charAt(0)?.toUpperCase() || '?'}
-                  </span>
-                </div>
-                <div className="bg-gray-100 rounded-2xl px-4 py-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </>
+          messages.map(renderMessage)
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 p-4">
-        <MessageInput onSendMessage={onSendMessage} />
-      </div>
+      <MessageInput onSendMessage={onSendMessage} />
+
+      {/* Image Modal */}
+      {imageModal.isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          onClick={closeModal}
+        >
+          <div className="relative max-w-4xl max-h-4xl">
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-white text-2xl bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-75 transition-colors z-10"
+            >
+              ×
+            </button>
+            <Image
+              src={imageModal.imageUrl}
+              alt="Full size image"
+              width={800}
+              height={600}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
