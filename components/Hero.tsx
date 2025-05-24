@@ -40,21 +40,21 @@ export default function Hero() {
                 Now Available
               </span>
             </div>
+
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 text-gray-900 dark:text-white">
-              Build your next{" "}
+              Transform Student{" "}
               <span className="relative inline-block">
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 animate-shimmer">
-                  project faster
+                  Trading
                 </span>
                 <span className="absolute -bottom-1.5 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 rounded-full"></span>
               </span>{" "}
-              with our components
+              with Our Marketplace
             </h1>
             <p className="text-lg md:text-xl leading-relaxed mb-8 text-gray-600 dark:text-gray-300 max-w-2xl transition-all duration-1000 delay-300 ease-in-out">
               Join a student-only marketplace designed for secure buying,
               selling, and skill exchange within trusted campus communities
             </p>
-
             <div className="flex flex-wrap gap-4 transition-all duration-1000 delay-500 ease-in-out">
               <button className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30 transform hover:scale-105 transition-all duration-300">
                 Get Started
@@ -63,7 +63,6 @@ export default function Hero() {
                 View Components
               </button>
             </div>
-
             <div className="mt-8 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 transition-all duration-1000 delay-700 ease-in-out">
               <div className="flex -space-x-2">
                 <Image
@@ -93,7 +92,7 @@ export default function Hero() {
                 <span className="font-medium text-gray-900 dark:text-white">
                   1,000+
                 </span>{" "}
-                developers
+                Students
               </span>
             </div>
           </div>
