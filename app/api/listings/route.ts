@@ -93,32 +93,42 @@ export async function POST(request: NextRequest) {
     // Process locations - ensure proper GeoJSON format with numeric coordinates
     const processedLocations = locations && Array.isArray(locations) 
       ? locations.map((location: any) => {
+          console.log('Processing location:', location); // Debug log
+          
           // Ensure coordinates are valid numbers
           let longitude = 0;
           let latitude = 0;
 
-          if (Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
-            longitude = parseFloat(location.coordinates[0]);
-            latitude = parseFloat(location.coordinates[1]);
+          if (location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
+            // Convert to numbers and validate
+            const lng = Number(location.coordinates[0]);
+            const lat = Number(location.coordinates[1]);
             
             // Validate coordinate ranges
-            if (isNaN(longitude) || isNaN(latitude) || 
-                longitude < -180 || longitude > 180 || 
-                latitude < -90 || latitude > 90) {
+            if (!isNaN(lng) && !isNaN(lat) && 
+                lng >= -180 && lng <= 180 && 
+                lat >= -90 && lat <= 90) {
+              longitude = lng;
+              latitude = lat;
+            } else {
               console.warn('Invalid coordinates:', location.coordinates);
-              longitude = 0;
-              latitude = 0;
+              return null; // Skip invalid coordinates
             }
+          } else {
+            console.warn('Missing or invalid coordinates structure:', location);
+            return null; // Skip invalid coordinates
           }
           
           return {
             type: 'Point',
-            coordinates: [longitude, latitude], // [longitude, latitude] as numbers
-            name: location.name || 'Unnamed Location',
+            coordinates: [longitude, latitude], // Ensure these are numbers
+            name: String(location.name || 'Unnamed Location'),
             isUniversity: Boolean(location.isUniversity)
           };
-        }).filter(loc => loc.coordinates[0] !== 0 || loc.coordinates[1] !== 0) // Remove invalid coordinates
+        }).filter(loc => loc !== null) // Remove null entries
       : [];
+
+    console.log('Processed locations:', processedLocations); // Debug log
 
     // Create listing data
     const listingData: Partial<IListing> = {
