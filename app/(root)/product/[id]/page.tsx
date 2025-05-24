@@ -90,12 +90,12 @@ export default function ProductPage() {
         const listingResult = await listingResponse.json();
 
         if (!listingResponse.ok) {
-          throw new Error(listingResult.error || 'Failed to fetch listing');
+          throw new Error(listingResult.error || "Failed to fetch listing");
         }
 
         if (listingResult.success) {
           const listingData = listingResult.data;
-          
+
           // Set listing data
           setListing({
             ...listingData,
@@ -103,48 +103,51 @@ export default function ProductPage() {
             updatedAt: new Date(listingData.updatedAt),
             editedFields: []
           });
-          
+
           // Check if current user is the owner
           setIsOwner(user?.id === listingData.sellerId);
-          
+
           // Set initial edit form data
           setEditFormData(listingData);
 
           // Fetch seller information
           try {
-            const sellerResponse = await fetch(`/api/users?clerkId=${listingData.sellerId}`);
+            const sellerResponse = await fetch(
+              `/api/users?clerkId=${listingData.sellerId}`
+            );
             const sellerResult = await sellerResponse.json();
-            
+
             if (sellerResponse.ok && sellerResult.success) {
               const seller = sellerResult.data;
               setSellerInfo({
                 name: `${seller.firstName} ${seller.lastName}`,
                 university: seller.university,
-                rating: seller.rating || 4.8
+                rating: seller.rating || 4.8,
               });
             } else {
               // Fallback seller info
               setSellerInfo({
-                name: 'User',
-                university: listingData.sellerUniversity || 'Unknown University',
-                rating: 4.8
+                name: "User",
+                university:
+                  listingData.sellerUniversity || "Unknown University",
+                rating: 4.8,
               });
             }
           } catch (sellerError) {
-            console.error('Error fetching seller info:', sellerError);
+            console.error("Error fetching seller info:", sellerError);
             // Set fallback seller info
             setSellerInfo({
-              name: 'User',
-              university: listingData.sellerUniversity || 'Unknown University',
-              rating: 4.8
+              name: "User",
+              university: listingData.sellerUniversity || "Unknown University",
+              rating: 4.8,
             });
           }
         } else {
-          throw new Error(listingResult.error || 'Failed to fetch listing');
+          throw new Error(listingResult.error || "Failed to fetch listing");
         }
       } catch (err) {
-        console.error('Error fetching listing:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load listing');
+        console.error("Error fetching listing:", err);
+        setError(err instanceof Error ? err.message : "Failed to load listing");
       } finally {
         setLoading(false);
       }
@@ -183,8 +186,12 @@ export default function ProductPage() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Listing Not Found</h1>
-          <p className="text-gray-600 mb-4">The listing you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Listing Not Found
+          </h1>
+          <p className="text-gray-600 mb-4">
+            The listing you're looking for doesn't exist.
+          </p>
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -221,7 +228,7 @@ export default function ProductPage() {
       parseFloat(bidAmount) <= (listing?.currentBid || listing?.price || 0)
     ) {
       toast.error("Bid must be higher than current bid", {
-        style: { background: "#fee2e2", color: "#b91c1c" }
+        style: { background: "#fee2e2", color: "#b91c1c" },
       });
       return;
     }
@@ -247,7 +254,7 @@ export default function ProductPage() {
     toast.success(
       `Bid placed successfully! Your bid: $${parseFloat(bidAmount).toFixed(2)}`,
       {
-        style: { background: "#dcfce7", color: "#166534" }
+        style: { background: "#dcfce7", color: "#166534" },
       }
     );
 
@@ -264,7 +271,9 @@ export default function ProductPage() {
 
   const previousImage = () => {
     setCurrentImageIndex(
-      (prev) => (prev - 1 + (listing?.images.length || 1)) % (listing?.images.length || 1)
+      (prev) =>
+        (prev - 1 + (listing?.images.length || 1)) %
+        (listing?.images.length || 1)
     );
   };
 
@@ -393,10 +402,10 @@ export default function ProductPage() {
 
               <div className="flex items-center mt-2 text-sm text-gray-600">
                 <TbClock className="mr-1" />
-                Listed {listing.createdAt.toLocaleDateString()}
-                {listing.updatedAt > listing.createdAt && (
+                Listed {new Date(listing.createdAt).toLocaleDateString()}
+                {new Date(listing.updatedAt) > new Date(listing.createdAt) && (
                   <span className="ml-2 text-yellow-600">
-                    • Updated {listing.updatedAt.toLocaleDateString()}
+                    • Updated {new Date(listing.updatedAt).toLocaleDateString()}
                   </span>
                 )}
               </div>
@@ -419,7 +428,6 @@ export default function ProductPage() {
               </motion.button>
             </div>
           </div>
-
           {/* Price & Bidding */}
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6">
             {listing.pricingType === "bidding" ? (
@@ -526,7 +534,8 @@ export default function ProductPage() {
                 <TbTag className="text-blue-600 text-3xl" />
               </div>
             )}
-          </div>          {/* Seller Info */}
+          </div>{" "}
+          {/* Seller Info */}
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <h3 className="font-medium text-gray-900 mb-3 flex items-center">
               <TbUser className="mr-2 text-blue-600" />
@@ -539,21 +548,26 @@ export default function ProductPage() {
                     <TbUser className="text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium">{sellerInfo?.name || 'Unknown User'}</p>
+                    <p className="font-medium">
+                      {sellerInfo?.name || "Unknown User"}
+                    </p>
                     <div className="flex items-center text-sm text-gray-600">
                       <FaUniversity className="mr-1" />
-                      {sellerInfo?.university || listing.sellerUniversity || 'Unknown University'}
+                      {sellerInfo?.university ||
+                        listing.sellerUniversity ||
+                        "Unknown University"}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center text-yellow-500">
                   <TbStar className="mr-1" />
-                  <span className="text-sm font-medium">{sellerInfo?.rating?.toFixed(1) || '4.8'}</span>
+                  <span className="text-sm font-medium">
+                    {sellerInfo?.rating?.toFixed(1) || "4.8"}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-
           {/* Action Buttons */}
           {isOwner ? (
             <div className="flex space-x-3">
@@ -601,7 +615,6 @@ export default function ProductPage() {
               Message Seller
             </motion.button>
           )}
-
           {/* Product Details */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
             <h3 className="font-medium text-gray-900 flex items-center">
@@ -705,7 +718,6 @@ export default function ProductPage() {
               </div>
             )}
           </div>
-
           {/* Status Alerts */}
           {listing.status !== "active" && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
@@ -716,7 +728,6 @@ export default function ProductPage() {
               </p>
             </div>
           )}
-
           {editedFields.length > 0 && isOwner && !isEditing && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-800 text-sm">
