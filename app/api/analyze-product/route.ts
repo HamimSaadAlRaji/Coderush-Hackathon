@@ -27,7 +27,7 @@ export interface ApiResponse {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 
 // Valid condition values
-const VALID_CONDITIONS: ProductCondition[] = ['new', 'likeNew', 'good', 'fair', 'poor'];
+const VALID_CONDITIONS: ProductCondition[] = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
 // Prompt template
 const ANALYSIS_PROMPT = `

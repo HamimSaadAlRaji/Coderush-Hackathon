@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { TbEdit, TbArrowLeft } from "react-icons/tb";
 import AiTwinkleButton from "./AiTwinkleButton";
+import { useState } from "react";
 
 interface BasicInformationProps {
   formData: any;
@@ -11,6 +12,7 @@ interface BasicInformationProps {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => void;
+  setFormData: (data: any) => void; // Add this line
   validationErrors: any;
   onBack: () => void;
   onNext: () => void;
@@ -46,16 +48,78 @@ const itemConditions = [
 export default function BasicInformation({
   formData,
   handleChange,
+  setFormData, // Add this
   validationErrors,
   onBack,
   onNext,
   itemVariants,
 }: BasicInformationProps) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   const handleConditionSelect = (condition: string) => {
     const event = {
       target: { name: "condition", value: condition },
     } as React.ChangeEvent<HTMLInputElement>;
     handleChange(event);
+  };
+
+  const handleAiAnalysis = async () => {
+    // Check if there are any images uploaded
+    if (!formData.images || formData.images.length === 0) {
+      alert("Please upload an image first in the category selection step.");
+      return;
+    }
+
+    // Use the first image for analysis
+    const imageUrl = formData.images[0];
+
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/analyze-product",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imageUrl: imageUrl,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Map API condition values to form values
+        const conditionMapping: { [key: string]: string } = {
+          New: "new",
+          "Like New": "likeNew",
+          Good: "good",
+          Fair: "fair",
+          Poor: "poor",
+        };
+
+        const conditionValue =
+          conditionMapping[result.data.condition] ||
+          result.data.condition.toLowerCase();
+
+        // Update formData directly
+        setFormData((prev: any) => ({
+          ...prev,
+          title: result.data.productName,
+          description: result.data.description,
+          condition: conditionValue,
+        }));
+      } else {
+        alert("Failed to analyze the image. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error analyzing product:", error);
+      alert("An error occurred while analyzing the image. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -65,14 +129,18 @@ export default function BasicInformation({
           <TbEdit className="mr-2 text-blue-600" /> Basic Information
         </div>
         {formData.category === "item" && (
-        <div className="ml-auto">
-          <div
-            className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 cursor-pointer transition-colors group"
-            title="Generate your Product name, Description and product condition from your image"
-          >
-            <AiTwinkleButton />
+          <div className="ml-auto relative">
+            <AiTwinkleButton
+              onClick={isAnalyzing ? undefined : handleAiAnalysis}
+              className={isAnalyzing ? "opacity-50 cursor-not-allowed" : ""}
+              title="Generate your Product name, Description and product condition from your image"
+            />
+            {isAnalyzing && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              </div>
+            )}
           </div>
-        </div>
         )}
       </h2>
       <div className="space-y-6">
@@ -182,6 +250,7 @@ export default function BasicInformation({
               {itemConditions.map((condition) => (
                 <div
                   key={condition.value}
+                  data-condition={condition.value}
                   onClick={() => handleConditionSelect(condition.value)}
                   className={`cursor-pointer border px-4 py-2 rounded-full transition-all ${
                     formData.condition === condition.value
@@ -200,6 +269,8 @@ export default function BasicInformation({
             )}
           </motion.div>
         )}
+
+        {/* ...existing code... */}
 
         <motion.div variants={itemVariants}>
           <label

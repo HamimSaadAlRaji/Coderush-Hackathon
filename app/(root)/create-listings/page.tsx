@@ -350,6 +350,7 @@ export default function CreateListingPage() {
             <BasicInformation
               formData={formData}
               handleChange={handleChange}
+              setFormData={setFormData}  
               validationErrors={validationErrors}
               onBack={() => setCurrentStep(1)}
               onNext={handleNextStep}

@@ -11,7 +11,7 @@ interface AiTwinkleButtonProps {
 export default function AiTwinkleButton({
   onClick,
   className = "",
-  title = "Generate with AI",
+  title = "Generate your Product name, Description and product condition from your image",
 }: AiTwinkleButtonProps) {
   return (
     <div
@@ -21,10 +21,12 @@ export default function AiTwinkleButton({
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors"
+        className={`h-5 w-5 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer rounded-full p-2 bg-gray-100 hover:bg-blue-100 ${className}`}
+        style={{ width: "40px", height: "40px" }}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
+        onClick={onClick} 
       >
         <g>
           <path
