@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { useParams } from "next/navigation";
-import { Conversation, Message } from "@/models/Message";
-import { io, Socket } from "socket.io-client";
 import ChatSidebar from "@/components/ChatSideBar";
 import ChatWindow from "@/components/ChatWindow";
+import { Conversation, Message } from "@/models/Message";
+import { io, Socket } from "socket.io-client";
 
 export default function ConversationPage() {
   const { user, isLoaded } = useUser();
@@ -46,7 +46,7 @@ export default function ConversationPage() {
       }
     });
 
-    socketInstance.on("receive-message", (newMessage: Message) => {
+    socketInstance.on("receive-message", (newMessage) => {
       setMessages((prev) => [...prev, newMessage]);
     });
 
@@ -74,8 +74,9 @@ export default function ConversationPage() {
         const data = await response.json();
         setConversations(data);
 
+        // Find current conversation
         const current = data.find(
-          (conv: Conversation) => conv._id === conversationId
+          (conv: Conversation) => String(conv._id) === conversationId
         );
         setCurrentConversation(current || null);
       }
@@ -102,10 +103,13 @@ export default function ConversationPage() {
 
   const markMessagesAsRead = async () => {
     try {
-      await fetch("/api/conversations/${conversationId}/mark-read", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-      });
+      await fetch(
+        `/api/conversations/${conversationId}/messages/mark-read`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
@@ -167,13 +171,12 @@ export default function ConversationPage() {
       ) : (
         <div className="flex-1 flex items-center justify-center bg-white">
           <div className="text-center">
-            <div className="text-6xl mb-4">❌</div>
+            <div className="text-6xl mb-4">💬</div>
             <h2 className="text-2xl font-semibold text-gray-700 mb-2">
               Conversation not found
             </h2>
             <p className="text-gray-500">
-              This conversation may have been deleted or you don't have access
-              to it
+              This conversation may have been deleted or you don't have access to it
             </p>
           </div>
         </div>

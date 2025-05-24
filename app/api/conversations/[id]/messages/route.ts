@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -15,17 +15,21 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Await params before using
+    const { id } = await params;
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
     const skip = (page - 1) * limit;
 
     const messages = await MessageModel.find({
-      conversationId: params.id,
+      conversationId: id,
     })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 }) // Ascending order for chat
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     // Manually populate sender info since we're using Clerk IDs
     const messagesWithSenderInfo = await Promise.all(
@@ -38,7 +42,7 @@ export async function GET(
             const result = await response.json();
             if (result.success) {
               return {
-                ...message.toObject(),
+                ...message,
                 senderId: {
                   _id: message.senderId,
                   name: `${result.data.firstName} ${result.data.lastName}`,
@@ -49,7 +53,7 @@ export async function GET(
             }
           }
           return {
-            ...message.toObject(),
+            ...message,
             senderId: {
               _id: message.senderId,
               name: "Unknown User",
@@ -59,7 +63,7 @@ export async function GET(
           };
         } catch (error) {
           return {
-            ...message.toObject(),
+            ...message,
             senderId: {
               _id: message.senderId,
               name: "Unknown User",
@@ -71,7 +75,7 @@ export async function GET(
       })
     );
 
-    return NextResponse.json(messagesWithSenderInfo.reverse());
+    return NextResponse.json(messagesWithSenderInfo);
   } catch (error) {
     console.error("Error fetching messages:", error);
     return NextResponse.json(
@@ -83,7 +87,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -93,12 +97,25 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Await params before using
+    const { id } = await params;
+
     const { content, images } = await request.json();
 
+    // Validate that we have either content or images
+    if (!content && (!images || images.length === 0)) {
+      return NextResponse.json(
+        {
+          error: "Message must have either content or images",
+        },
+        { status: 400 }
+      );
+    }
+
     const message = new MessageModel({
-      conversationId: params.id,
+      conversationId: id,
       senderId: userId, // Using Clerk user ID directly
-      content,
+      content: content || "", // Allow empty content if we have images
       images: images || [],
       read: false,
     });
@@ -106,8 +123,13 @@ export async function POST(
     await message.save();
 
     // Update conversation's last message
-    await ConversationModel.findByIdAndUpdate(params.id, {
-      lastMessage: content,
+    const lastMessage =
+      content ||
+      (images && images.length > 0
+        ? `📷 ${images.length} image(s)`
+        : "");
+    await ConversationModel.findByIdAndUpdate(id, {
+      lastMessage: lastMessage,
       lastMessageAt: new Date(),
     });
 

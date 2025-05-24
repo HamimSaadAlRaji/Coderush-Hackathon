@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -15,9 +15,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Await params before using
+    const { id } = await params;
+
     await MessageModel.updateMany(
       {
-        conversationId: params.id,
+        conversationId: id,
         senderId: { $ne: userId }, // Using Clerk user ID
         read: false,
       },
