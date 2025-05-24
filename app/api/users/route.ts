@@ -90,8 +90,20 @@ export async function GET(request: NextRequest) {
     // Connect to database
     await connectDB();
 
-    // Find user
-    const user = await User.findOne({ clerkId: userId });
+    // Check if a specific user is requested via query parameter
+    const { searchParams } = new URL(request.url);
+    const requestedClerkId = searchParams.get('clerkId');
+
+    let user;
+    
+    if (requestedClerkId) {
+      // Fetch specific user by clerkId
+      user = await User.findOne({ clerkId: requestedClerkId });
+    } else {
+      // Fetch current authenticated user
+      user = await User.findOne({ clerkId: userId });
+    }
+
     if (!user) {
       return NextResponse.json({
         success: false,
