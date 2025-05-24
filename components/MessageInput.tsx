@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
+import { TbSend, TbPhoto, TbX, TbLoader2 } from 'react-icons/tb';
 
 interface MessageInputProps {
   onSendMessage: (content: string, images?: string[]) => void;
@@ -34,14 +35,21 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
           body: formData,
         });
 
-        if (uploadResponse.ok) {
-          const uploadData = await uploadResponse.json();
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadResponse.ok) {
+          throw new Error(uploadData.error || 'Failed to upload images');
+        }
+
+        if (uploadData.success && uploadData.urls) {
           imageUrls = uploadData.urls;
+        } else {
+          throw new Error('Invalid response format from upload');
         }
       }
 
       // Send message
-      await onSendMessage(message.trim(), imageUrls.length > 0 ? imageUrls : undefined);
+      await onSendMessage(message.trim(), imageUrls);
       
       // Reset form
       setMessage('');
@@ -51,6 +59,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      alert(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
     }
@@ -58,95 +67,117 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedImages(prev => [...prev, ...files].slice(0, 5)); // Limit to 5 images
+    
+    // Validate file types
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      alert('Please select only JPEG, PNG, GIF, or WebP images.');
+      return;
+    }
+
+    // Validate file sizes (5MB each)
+    const maxSize = 5 * 1024 * 1024;
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      alert('Please select images smaller than 5MB each.');
+      return;
+    }
+
+    // Limit total number of images
+    const totalImages = selectedImages.length + files.length;
+    if (totalImages > 5) {
+      alert('You can only send up to 5 images at once.');
+      return;
+    }
+
+    setSelectedImages(prev => [...prev, ...files]);
   };
 
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e as any);
-    }
-  };
-
   return (
-    <div className="space-y-3">
-      {/* Image Previews */}
+    <div className="border-t bg-white p-4">
+      {/* Image Preview */}
       {selectedImages.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedImages.map((file, index) => (
-            <div key={index} className="relative">
-              <img
-                src={URL.createObjectURL(file)}
-                alt={`Preview ${index + 1}`}
-                className="w-16 h-16 object-cover rounded-lg"
-              />
-              <button
-                onClick={() => removeImage(index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2">
+            {selectedImages.map((file, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`Preview ${index + 1}`}
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                >
+                  <TbX />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex items-end space-x-3">
-        {/* Message Input */}
-        <div className="flex-1 relative">
+      {/* Message Input Form */}
+      <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+        <div className="flex-1">
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type a message..."
+            placeholder="Type your message..."
             rows={1}
-            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            style={{ minHeight: '48px', maxHeight: '120px' }}
-            disabled={uploading}
-          />
-          
-          {/* Image Upload Button */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute right-3 bottom-3 text-gray-400 hover:text-gray-600 transition-colors"
-            disabled={uploading}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </button>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageSelect}
-            className="hidden"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
             disabled={uploading}
           />
         </div>
+
+        {/* Image Upload Button */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading || selectedImages.length >= 5}
+          className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title={selectedImages.length >= 5 ? "Maximum 5 images allowed" : "Add images"}
+        >
+          <TbPhoto className="w-6 h-6" />
+        </button>
 
         {/* Send Button */}
         <button
           type="submit"
           disabled={(!message.trim() && selectedImages.length === 0) || uploading}
-          className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
         >
           {uploading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <TbLoader2 className="w-6 h-6 animate-spin" />
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
+            <TbSend className="w-6 h-6" />
           )}
         </button>
+
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
       </form>
     </div>
   );

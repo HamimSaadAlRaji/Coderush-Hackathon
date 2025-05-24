@@ -40,8 +40,7 @@ const UserSchema = new Schema<IUser>({
   clerkId: { 
     type: String, 
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   email: { 
     type: String, 
@@ -102,10 +101,5 @@ const UserSchema = new Schema<IUser>({
 }, {
   timestamps: true
 });
-
-// Create indexes
-UserSchema.index({ clerkId: 1 });
-UserSchema.index({ email: 1 });
-UserSchema.index({ university: 1 });
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
