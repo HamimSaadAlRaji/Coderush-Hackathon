@@ -19,16 +19,11 @@ interface Listing {
     visibility: 'university' | 'all';
     status: 'active' | 'sold' | 'expired' | 'removed';
     createdAt: Date;
-    updatedAt: Date;
-    aiSuggestedPrice?: number;
-    aiConditionEstimate?: string;
+    updatedAt: Date; 
     tags?: string[];
-    location?: {
+    locations?: Array<{
       type: 'Point';
       coordinates: [number, number]; // [longitude, latitude]
-    };
-    meetupPreferences?: {
-      campusLocations: string[];
-      availableTimes: string[];
-    };
+    }>;
+     
   }
