@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
+ 
 export function formatParsedText(input: string): string {
   // Replace sequences of special characters with appropriate spacing
   let formatted = input
@@ -21,4 +21,4 @@ export function formatParsedText(input: string): string {
     .replace(/\n/g, "\n "); // Add space after newlines for better readability
 
   return formatted;
-}
+} 

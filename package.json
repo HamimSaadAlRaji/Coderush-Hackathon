@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^6.20.0",
     "@google-cloud/vision": "^5.1.0",
     "@heroicons/react": "^2.2.0",
+    "@langchain/community": "^0.3.44",
     "@lottiefiles/dotlottie-react": "^0.13.5",
     "@supabase/supabase-js": "^2.49.4",
     "@tabler/icons-react": "^3.33.0",
