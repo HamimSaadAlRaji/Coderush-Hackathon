@@ -2,7 +2,9 @@
 
 import { motion } from "framer-motion";
 import { TbArrowLeft } from "react-icons/tb";
-import { FaCoins, FaTag, FaUniversity, FaEye } from "react-icons/fa";
+import { FaCoins, FaTag, FaUniversity, FaEye, FaInfoCircle } from "react-icons/fa";
+import AiTwinkleButton from "./AiTwinkleButton";
+import { useState } from "react";
 
 interface PricingVisibilityProps {
   formData: any;
@@ -24,7 +26,6 @@ const pricingTypes = [
   { value: "bidding", label: "Accept Bids" },
   { value: "hourly", label: "Hourly Rate (Services)" },
 ];
-
 export default function PricingVisibility({
   formData,
   handleChange,
@@ -35,13 +36,69 @@ export default function PricingVisibility({
   onNext,
   itemVariants,
 }: PricingVisibilityProps) {
+  const [isAnalyzingPrice, setIsAnalyzingPrice] = useState(false);
+  const [priceSuggestion, setPriceSuggestion] = useState<any>(null); // Add this state
+
   const handlePricingTypeSelect = (type: string) => {
     setFormData({ ...formData, pricingType: type });
     if (validationErrors.pricingType) {
       setValidationErrors((prev) => ({ ...prev, pricingType: undefined }));
     }
   };
+  const handlePriceSuggestion = async () => {
+    // Check if required data is available
+    if (!formData.title || !formData.condition) {
+      alert("Please fill in the product title and condition first in the Basic Information step.");
+      return;
+    }
 
+    setIsAnalyzingPrice(true);
+    setPriceSuggestion(null); // Clear previous suggestion
+    
+    try {
+      const response = await fetch("/api/suggest-price", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product: formData.title,
+          condition: formData.condition,
+          usedFor: formData.usedForMonths || "0",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.suggestedPrice) {
+        // Set the average price from the suggestion
+        const averagePrice = result.data.suggestedPrice.average;
+        
+        // Update formData with the suggested price
+        setFormData((prev: any) => ({
+          ...prev,
+          price: averagePrice.toString(),
+        }));
+
+        // Store the suggestion data for display
+        setPriceSuggestion(result.data);
+
+        // Clear any price validation errors
+        if (validationErrors.price) {
+          setValidationErrors((prev: any) => ({ ...prev, price: undefined }));
+        }
+
+        // Remove the alert - no popup anymore
+      } else {
+        alert("Failed to get price suggestion. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error getting price suggestion:", error);
+      alert("An error occurred while getting price suggestion. Please try again.");
+    } finally {
+      setIsAnalyzingPrice(false);
+    }
+  };
   const handleVisibilitySelect = (visibility: string) => {
     setFormData({ ...formData, visibility });
     if (validationErrors.visibility) {
@@ -51,8 +108,25 @@ export default function PricingVisibility({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-6 flex items-center">
-        <FaCoins className="mr-2 text-blue-600" /> Pricing & Visibility
+      <h2 className="text-2xl font-bold mb-6 flex items-center justify-between">
+        <div className="flex items-center">
+          <FaCoins className="mr-2 text-blue-600" /> Pricing & Visibility
+        </div>
+        {/* Add the AI button here */}
+        {formData.category === "item" && (
+          <div className="ml-auto relative">
+            <AiTwinkleButton
+              onClick={isAnalyzingPrice ? undefined : handlePriceSuggestion}
+              className={isAnalyzingPrice ? "opacity-50 cursor-not-allowed" : ""}
+              title="Get AI price suggestion based on product title and condition"
+            />
+            {isAnalyzingPrice && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+          </div>
+        )}
       </h2>
 
       <div className="space-y-6">
@@ -129,6 +203,53 @@ export default function PricingVisibility({
             <p className="text-red-500 text-sm mt-1">
               {validationErrors.price}
             </p>
+          )}
+          {/* Add AI Price Suggestion Reasoning Section */}
+          {priceSuggestion && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+            >
+              <div className="flex items-start space-x-3">
+                <FaInfoCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-blue-900 mb-2">
+                    AI Price Suggestion
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Suggested Price Range:</span>
+                      <span className="font-medium text-blue-800">
+                        {priceSuggestion.suggestedPrice.currency} {priceSuggestion.suggestedPrice.min.toLocaleString()} - {priceSuggestion.suggestedPrice.max.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Average Price:</span>
+                      <span className="font-semibold text-blue-900">
+                        {priceSuggestion.suggestedPrice.currency} {priceSuggestion.suggestedPrice.average.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Confidence Level:</span>
+                      <span className={`font-medium capitalize ${
+                        priceSuggestion.confidence === 'high' ? 'text-green-600' :
+                        priceSuggestion.confidence === 'medium' ? 'text-yellow-600' :
+                        'text-orange-600'
+                      }`}>
+                        {priceSuggestion.confidence}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-sm text-gray-700">
+                      <strong>Reasoning:</strong> {priceSuggestion.reasoning}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
         </motion.div>
 
