@@ -23,6 +23,8 @@ export interface IListing extends Document {
     locations?: Array<{
       type: 'Point';
       coordinates: [number, number];
+      name?: string;
+      isUniversity?: boolean;
     }>;
     createdAt: Date;
     updatedAt: Date;
@@ -36,7 +38,9 @@ const BidSchema = new Schema({
 
 const LocationSchema = new Schema({
   type: { type: String, enum: ['Point'], default: 'Point' },
-  coordinates: { type: [Number], required: true } // [longitude, latitude]
+  coordinates: { type: [Number], required: true }, // [longitude, latitude]
+  name: { type: String, trim: true },
+  isUniversity: { type: Boolean, default: false }
 });
 
 const ListingSchema = new Schema<IListing>({
@@ -112,7 +116,7 @@ const ListingSchema = new Schema<IListing>({
   }],
   locations: [LocationSchema]
 }, {
-  timestamps: true // This automatically adds createdAt and updatedAt
+  timestamps: true
 });
 
 // Create indexes for better query performance
@@ -123,5 +127,4 @@ ListingSchema.index({ status: 1, visibility: 1 });
 ListingSchema.index({ createdAt: -1 });
 ListingSchema.index({ 'locations': '2dsphere' });
 
-// Export the model
 export default mongoose.models.Listing || mongoose.model<IListing>('Listing', ListingSchema);

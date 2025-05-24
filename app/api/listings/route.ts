@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
       condition,
       images,
       visibility,
-      tags
+      tags,
+      locations
     } = body;
 
     // Validate required fields
@@ -52,7 +53,9 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'At least one image is required'
       }, { status: 400 });
-    }    // Connect to database
+    }
+
+    // Connect to database
     await connectDB();
 
     // Get user information or create if doesn't exist
@@ -87,6 +90,36 @@ export async function POST(request: NextRequest) {
       ? tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
       : [];
 
+    // Process locations - ensure proper GeoJSON format with numeric coordinates
+    const processedLocations = locations && Array.isArray(locations) 
+      ? locations.map((location: any) => {
+          // Ensure coordinates are valid numbers
+          let longitude = 0;
+          let latitude = 0;
+
+          if (Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
+            longitude = parseFloat(location.coordinates[0]);
+            latitude = parseFloat(location.coordinates[1]);
+            
+            // Validate coordinate ranges
+            if (isNaN(longitude) || isNaN(latitude) || 
+                longitude < -180 || longitude > 180 || 
+                latitude < -90 || latitude > 90) {
+              console.warn('Invalid coordinates:', location.coordinates);
+              longitude = 0;
+              latitude = 0;
+            }
+          }
+          
+          return {
+            type: 'Point',
+            coordinates: [longitude, latitude], // [longitude, latitude] as numbers
+            name: location.name || 'Unnamed Location',
+            isUniversity: Boolean(location.isUniversity)
+          };
+        }).filter(loc => loc.coordinates[0] !== 0 || loc.coordinates[1] !== 0) // Remove invalid coordinates
+      : [];
+
     // Create listing data
     const listingData: Partial<IListing> = {
       title: title.trim(),
@@ -101,7 +134,8 @@ export async function POST(request: NextRequest) {
       sellerUniversity: user.university || 'Unknown University',
       visibility: visibility || 'university',
       status: 'active',
-      tags: processedTags
+      tags: processedTags,
+      locations: processedLocations
     };
 
     // Create new listing
@@ -134,6 +168,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Handle MongoDB geospatial errors
+    if (error instanceof Error && (error.message.includes('geo keys') || error.message.includes('Point must only contain numeric elements'))) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid location data format',
+        details: 'Location coordinates must be valid numbers'
+      }, { status: 400 });
+    }
+
     return NextResponse.json({
       success: false,
       error: 'Failed to create listing'
@@ -145,7 +188,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');    const category = searchParams.get('category');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const category = searchParams.get('category');
     const university = searchParams.get('university');
     const sellerId = searchParams.get('sellerId');
     
