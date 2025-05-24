@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   TbEdit,
   TbPackage,
   TbBookUpload,
   TbSchool,
-  TbCloudUpload,
-  TbTrash,
   TbArrowLeft,
 } from "react-icons/tb";
 import { FaTag, FaCoins, FaEye, FaCamera, FaUniversity } from "react-icons/fa";
+import ImageUploadComponent from "@/components/ImageUpload";
+import { ImageUploadResult } from "@/lib/hooks/useImageUpload";
 
 const categories = [
   { value: "item", label: "Item (Physical Product)" },
@@ -52,11 +51,9 @@ const pricingTypes = [
   { value: "hourly", label: "Hourly Rate (Services)" },
 ];
 
-export default function CreateListingPage() {
-  const router = useRouter();
+export default function CreateListingPage() {  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -65,11 +62,10 @@ export default function CreateListingPage() {
     price: "",
     pricingType: "fixed",
     condition: "good",
-    images: [] as File[],
+    imageUrls: [] as string[],
     visibility: "university",
     tags: "",
   });
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -80,61 +76,76 @@ export default function CreateListingPage() {
       ...formData,
       [name]: value,
     });
+  };  const handleImageUploadSuccess = (result: ImageUploadResult) => {
+    // Add image URL to form data
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: [...prev.imageUrls, result.url]
+    }));
+    console.log('Image uploaded successfully:', result.url);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-
-      // Limit to 5 images
-      const newImages = [...formData.images, ...filesArray].slice(0, 5);
-      setFormData({
-        ...formData,
-        images: newImages,
-      });
-
-      // Create preview URLs
-      const newPreviewImages = newImages.map((file) =>
-        URL.createObjectURL(file)
-      );
-      setPreviewImages(newPreviewImages);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const newImages = [...formData.images];
-    const newPreviews = [...previewImages];
-
-    newImages.splice(index, 1);
-    newPreviews.splice(index, 1);
-
-    setFormData({
-      ...formData,
-      images: newImages,
-    });
-    setPreviewImages(newPreviews);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleImageUploadError = (error: string) => {
+    console.error('Image upload error:', error);
+    // You can add toast notification here
+  };  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setIsSubmitting(true);
 
     try {
-      // In a real app, you would send this data to your API
-      console.log("Submitting form data:", {
-        ...formData,
+      // Validate that at least one image is uploaded
+      if (formData.imageUrls.length === 0) {
+        alert('Please upload at least one image');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare submission data
+      const submissionData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        subCategory: formData.subCategory,
         price: parseFloat(formData.price),
-        tags: formData.tags.split(",").map((tag) => tag.trim()),
+        pricingType: formData.pricingType,
+        condition: formData.category === 'item' ? formData.condition : undefined,
+        images: formData.imageUrls,
+        visibility: formData.visibility,
+        tags: formData.tags
+      };
+
+      console.log("Submitting listing data:", submissionData);
+
+      // Submit to API
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
       });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create listing');
+      }
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create listing');
+      }
+
+      console.log('Listing created successfully:', result.data);
+      
+      // Show success message (you can replace with a toast notification)
+      alert('Listing created successfully!');
 
       // Redirect to my listings page
       router.push("/my-listings");
     } catch (error) {
       console.error("Error submitting listing:", error);
+      alert(`Error creating listing: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -539,9 +550,7 @@ export default function CreateListingPage() {
               </motion.div>
             </motion.div>
           </motion.div>
-        );
-
-      case 3:
+        );      case 3:
         return (
           <motion.div
             key="step3"
@@ -549,76 +558,19 @@ export default function CreateListingPage() {
             initial="hidden"
             animate="visible"
             exit="exit"
-          >
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+          >            <h2 className="text-2xl font-bold mb-6 flex items-center">
               <FaCamera className="mr-2 text-blue-600" /> Add Images
             </h2>
 
             <motion.div className="space-y-6" variants={containerVariants}>
-              <motion.div
-                variants={itemVariants}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors"
-              >
-                <input
-                  type="file"
-                  id="images"
-                  name="images"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                  className="hidden"
+              {/* Image Upload Component */}
+              <motion.div variants={itemVariants}>
+                <ImageUploadComponent
+                  onUploadSuccess={handleImageUploadSuccess}
+                  onUploadError={handleImageUploadError}
+                  maxFiles={5}
                 />
-                <label htmlFor="images" className="cursor-pointer">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="flex flex-col items-center"
-                  >
-                    <TbCloudUpload className="text-5xl text-blue-500 mb-2" />
-                    <h3 className="text-lg font-medium text-gray-700">
-                      Drag & drop or click to upload
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Upload up to 5 images (PNG, JPG, WEBP)
-                    </p>
-                  </motion.div>
-                </label>
               </motion.div>
-
-              {previewImages.length > 0 && (
-                <motion.div
-                  variants={itemVariants}
-                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4"
-                >
-                  {previewImages.map((url, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="relative rounded-lg overflow-hidden aspect-square"
-                    >
-                      <Image
-                        src={url}
-                        alt={`Preview ${index + 1}`}
-                        fill
-                        style={{ objectFit: "cover" }}
-                        className="rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-white text-red-600 p-1 rounded-full shadow-md hover:bg-red-100 transition-colors"
-                      >
-                        <TbTrash size={18} />
-                      </button>
-                      {index === 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-xs text-center py-1">
-                          Main Image
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
 
               <motion.div
                 variants={itemVariants}
