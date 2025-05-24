@@ -1,6 +1,14 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import {
+  FaUserGraduate,
+  FaListUl,
+  FaComments,
+  FaMapMarkerAlt,
+  FaRobot,
+  FaStar,
+} from "react-icons/fa";
 
 export default function FeatureSection() {
   const [animationTriggered, setAnimationTriggered] = useState(false);
@@ -17,130 +25,40 @@ export default function FeatureSection() {
 
   const features = [
     {
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          ></path>
-        </svg>
-      ),
-      title: "Lightning Fast",
+      icon: <FaUserGraduate className="w-10 h-10" />,
+      title: "Verified Student Community",
       description:
-        "Our components are optimized for speed and performance, loading in milliseconds for the best user experience.",
+        "Ensures trust and exclusivity through university email verification and detailed academic profiles.",
     },
     {
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-          ></path>
-        </svg>
-      ),
-      title: "Customizable",
+      icon: <FaListUl className="w-10 h-10" />,
+      title: "Smart Listings & Discovery",
       description:
-        "Easily customize every aspect of our components to match your brand and design requirements.",
+        "Post items or services with flexible pricing, advanced filters, and visibility control within or across campuses.",
     },
     {
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-          ></path>
-        </svg>
-      ),
-      title: "Secure & Tested",
+      icon: <FaComments className="w-10 h-10" />,
+      title: "Real-Time Communication",
       description:
-        "All our components undergo rigorous testing to ensure they're secure, accessible, and bug-free.",
+        "Chat instantly, share images, and negotiate seamlessly within a secure platform.",
     },
     {
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-          ></path>
-        </svg>
-      ),
-      title: "Developer Friendly",
+      icon: <FaMapMarkerAlt className="w-10 h-10" />,
+      title: "Safe Campus Meetups",
       description:
-        "Well-documented code with TypeScript support makes implementation a breeze for developers of all skill levels.",
+        "Plan exchanges confidently with interactive campus maps highlighting safe meeting points.",
     },
     {
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-          ></path>
-        </svg>
-      ),
-      title: "Database Compatible",
+      icon: <FaRobot className="w-10 h-10" />,
+      title: "AI-Powered Tools",
       description:
-        "Seamlessly integrates with all popular databases and backend services with built-in adaptors.",
+        "Get price recommendations and condition estimates with AI-powered insights for smarter transactions.",
     },
     {
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
-          ></path>
-        </svg>
-      ),
-      title: "Cloud Ready",
+      icon: <FaStar className="w-10 h-10" />,
+      title: "Transparent Ratings & Moderation",
       description:
-        "Deploy with confidence knowing our components work flawlessly across all cloud environments and platforms.",
+        "Build trust with transaction reviews, student-led moderation, and monitored user feedback.",
     },
   ];
 
@@ -152,12 +70,12 @@ export default function FeatureSection() {
             Powerful Features for
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
               {" "}
-              Modern Development
+              Student Marketplace
             </span>
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-300">
-            Our component library is built with the latest technologies and best
-            practices
+            Our platform is built with students in mind, focusing on security,
+            convenience, and community
           </p>
         </div>
 
