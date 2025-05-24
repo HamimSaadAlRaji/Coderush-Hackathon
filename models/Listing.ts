@@ -37,8 +37,24 @@ const BidSchema = new Schema({
 });
 
 const LocationSchema = new Schema({
-  type: { type: String, enum: ['Point'], default: 'Point' },
-  coordinates: { type: [Number], required: true }, // [longitude, latitude]
+  type: { 
+    type: String, 
+    enum: ['Point'], 
+    default: 'Point',
+    required: true 
+  },
+  coordinates: { 
+    type: [Number], 
+    required: true,
+    validate: {
+      validator: function(coords: number[]) {
+        return coords.length === 2 && 
+               coords[0] >= -180 && coords[0] <= 180 && // longitude
+               coords[1] >= -90 && coords[1] <= 90;     // latitude
+      },
+      message: 'Coordinates must be [longitude, latitude] with valid ranges'
+    }
+  },
   name: { type: String, trim: true },
   isUniversity: { type: Boolean, default: false }
 });

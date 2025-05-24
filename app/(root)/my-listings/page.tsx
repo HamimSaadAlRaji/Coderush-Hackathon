@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -10,19 +11,12 @@ import { IListing } from "@/models/Listing";
 
 export default function MyListingsPage() {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [listings, setListings] = useState<IListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isLoaded && user) {
-      fetchMyListings();
-    } else if (isLoaded) {
-      setLoading(false);
-    }
-  }, [isLoaded, user]);
-
-  const fetchMyListings = async () => {
+  const fetchMyListings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/listings?sellerId=${user!.id}`);
@@ -43,7 +37,15 @@ export default function MyListingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      fetchMyListings();
+    } else if (isLoaded) {
+      setLoading(false);
+    }
+  }, [isLoaded, user, fetchMyListings]);
 
   const handleDeleteListing = async (listingId: string) => {
     if (!confirm('Are you sure you want to delete this listing?')) {
@@ -61,9 +63,8 @@ export default function MyListingsPage() {
         throw new Error(result.error || 'Failed to delete listing');
       }
 
-      if (result.success) {
-        // Remove the listing from state
-        setListings(listings.filter(listing => listing._id !== listingId));
+      if (result.success) {        // Remove the listing from state
+        setListings(listings.filter(listing => String(listing._id) !== listingId));
         alert('Listing deleted successfully');
       } else {
         throw new Error(result.error || 'Failed to delete listing');
@@ -148,15 +149,15 @@ export default function MyListingsPage() {
             Create Your First Listing
           </Link>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      ) : (        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((listing) => (
             <motion.div
-              key={listing._id}
+              key={String(listing._id)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push(`/product/${String(listing._id)}`)}
             >
               {/* Image */}
               <div className="relative h-48 bg-gray-200">
@@ -214,14 +215,19 @@ export default function MyListingsPage() {
                 {/* Actions */}
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => {/* TODO: Implement edit functionality */}}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click when clicking edit
+                      /* TODO: Implement edit functionality */
+                    }}
                     className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
                   >
                     <TbEdit className="mr-1" />
                     Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteListing(listing._id)}
+                  </button>                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click when clicking delete
+                      handleDeleteListing(String(listing._id));
+                    }}
                     className="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center"
                   >
                     <TbTrash />
