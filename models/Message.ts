@@ -27,7 +27,7 @@ const MessageSchema = new mongoose.Schema(
       required: true,
     },
     senderId: { type: String, required: true }, // String for Clerk user ID
-    content: { type: String, required: true },
+    content: { type: String, required: false, default: '' }, // Allow empty content for image-only messages
     images: [{ type: String }],
     read: { type: Boolean, default: false },
   },
@@ -37,10 +37,10 @@ const MessageSchema = new mongoose.Schema(
 const ConversationSchema = new mongoose.Schema(
   {
     participants: [{ type: String, required: true }], // Array of strings for Clerk user IDs
-    listingId: {
-      type: mongoose.Schema.Types.ObjectId,
+    listingId: { 
+      type: mongoose.Schema.Types.ObjectId, 
       ref: "Listing",
-      required: false,
+      required: false 
     },
     lastMessage: { type: String, default: "" },
     lastMessageAt: { type: Date, default: Date.now },

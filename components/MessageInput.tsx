@@ -11,20 +11,71 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!message.trim() && selectedImages.length === 0) return;
+  const uploadAndSendImages = async (files: File[]) => {
+    if (files.length === 0) return;
 
     setUploading(true);
     
     try {
-      let imageUrls: string[] = [];
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append('images', file);
+      });
+
+      const uploadResponse = await fetch('/api/chat/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const uploadData = await uploadResponse.json();
+
+      if (!uploadResponse.ok) {
+        throw new Error(uploadData.error || 'Failed to upload images');
+      }
+
+      if (uploadData.success && uploadData.urls) {
+        // Send images immediately without text
+        await onSendMessage('', uploadData.urls);
+        
+        // Clear selected images after successful upload and send
+        setSelectedImages([]);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        throw new Error('Invalid response format from upload');
+      }
+    } catch (error) {
+      console.error('Error uploading and sending images:', error);
+      alert(`Failed to send images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // If there's only text (no images), send the text message
+    if (message.trim() && selectedImages.length === 0) {
+      try {
+        await onSendMessage(message.trim());
+        setMessage('');
+      } catch (error) {
+        console.error('Error sending text message:', error);
+        alert(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      return;
+    }
+
+    // If there are both text and images, upload images and send together
+    if (message.trim() && selectedImages.length > 0) {
+      setUploading(true);
       
-      // Upload images if any
-      if (selectedImages.length > 0) {
+      try {
         const formData = new FormData();
         selectedImages.forEach((file) => {
           formData.append('images', file);
@@ -42,30 +93,27 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         }
 
         if (uploadData.success && uploadData.urls) {
-          imageUrls = uploadData.urls;
+          await onSendMessage(message.trim(), uploadData.urls);
+          
+          // Reset form
+          setMessage('');
+          setSelectedImages([]);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
         } else {
           throw new Error('Invalid response format from upload');
         }
+      } catch (error) {
+        console.error('Error sending message with images:', error);
+        alert(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        setUploading(false);
       }
-
-      // Send message
-      await onSendMessage(message.trim(), imageUrls);
-      
-      // Reset form
-      setMessage('');
-      setSelectedImages([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      alert(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setUploading(false);
     }
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
     // Validate file types
@@ -93,11 +141,22 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
       return;
     }
 
+    // Add to selected images for preview
     setSelectedImages(prev => [...prev, ...files]);
+
+    // Immediately upload and send the images
+    await uploadAndSendImages(files);
   };
 
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Send images immediately when they are in selectedImages (for manual send)
+  const handleSendImagesOnly = async () => {
+    if (selectedImages.length > 0) {
+      await uploadAndSendImages(selectedImages);
+    }
   };
 
   return (
@@ -105,6 +164,17 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
       {/* Image Preview */}
       {selectedImages.length > 0 && (
         <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Selected images:</span>
+            <button
+              type="button"
+              onClick={handleSendImagesOnly}
+              disabled={uploading}
+              className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {uploading ? 'Sending...' : 'Send Images'}
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {selectedImages.map((file, index) => (
               <div key={index} className="relative">
@@ -149,9 +219,9 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading || selectedImages.length >= 5}
+          disabled={uploading}
           className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title={selectedImages.length >= 5 ? "Maximum 5 images allowed" : "Add images"}
+          title="Add images (will send immediately)"
         >
           <TbPhoto className="w-6 h-6" />
         </button>
@@ -159,7 +229,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         {/* Send Button */}
         <button
           type="submit"
-          disabled={(!message.trim() && selectedImages.length === 0) || uploading}
+          disabled={!message.trim() || uploading}
           className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
         >
           {uploading ? (
@@ -179,6 +249,14 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
           className="hidden"
         />
       </form>
+
+      {/* Status indicator */}
+      {uploading && (
+        <div className="mt-2 text-sm text-blue-600 flex items-center">
+          <TbLoader2 className="w-4 h-4 animate-spin mr-2" />
+          Uploading and sending images...
+        </div>
+      )}
     </div>
   );
 }
