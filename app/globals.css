@@ -3,6 +3,8 @@
 /* @plugin "tailwindcss-animate"; */
 
 @custom-variant dark (&:is(.dark *));
+/* Add to your global CSS or layout */
+@import "leaflet/dist/leaflet.css";
 
 @theme {
   --color-success-100: #49de50;

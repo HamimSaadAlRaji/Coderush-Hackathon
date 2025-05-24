@@ -9,10 +9,22 @@ import {
   TbBookUpload,
   TbSchool,
   TbArrowLeft,
+  TbMapPin,
+  TbCurrentLocation,
+  TbSearch,
+  TbX,
 } from "react-icons/tb";
 import { FaTag, FaCoins, FaEye, FaCamera, FaUniversity } from "react-icons/fa";
 import ImageUploadComponent from "@/components/ImageUpload";
 import { ImageUploadResult } from "@/lib/hooks/useImageUpload";
+import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+// Dynamically import the map component to avoid SSR issues
+const LocationMapComponent = dynamic(
+  () => import("@/components/LocationMap"),
+  { ssr: false }
+);
 
 const categories = [
   { value: "item", label: "Item (Physical Product)" },
@@ -51,7 +63,15 @@ const pricingTypes = [
   { value: "hourly", label: "Hourly Rate (Services)" },
 ];
 
-export default function CreateListingPage() {  const router = useRouter();
+interface LocationPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+  name?: string;
+  isUniversity?: boolean;
+}
+
+export default function CreateListingPage() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -62,10 +82,12 @@ export default function CreateListingPage() {  const router = useRouter();
     price: "",
     pricingType: "fixed",
     condition: "good",
-    imageUrls: [] as string[],
+    images: [],
     visibility: "university",
     tags: "",
+    locations: [] as Location[]
   });
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -76,32 +98,45 @@ export default function CreateListingPage() {  const router = useRouter();
       ...formData,
       [name]: value,
     });
-  };  const handleImageUploadSuccess = (result: ImageUploadResult) => {
-    // Add image URL to form data
+  };
+
+  const handleLocationAdd = (location: Location) => {
     setFormData(prev => ({
       ...prev,
-      imageUrls: [...prev.imageUrls, result.url]
+      locations: [...prev.locations, location]
     }));
-    console.log('Image uploaded successfully:', result.url);
+  };
+
+  const handleLocationRemove = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      locations: prev.locations.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleImageUploadSuccess = (result: ImageUploadResult) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, result.url],
+    }));
+    console.log("Image uploaded successfully:", result.url);
   };
 
   const handleImageUploadError = (error: string) => {
-    console.error('Image upload error:', error);
-    // You can add toast notification here
-  };  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    console.error("Image upload error:", error);
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Validate that at least one image is uploaded
-      if (formData.imageUrls.length === 0) {
-        alert('Please upload at least one image');
+      if (formData.images.length === 0) {
+        alert("Please upload at least one image");
         setIsSubmitting(false);
         return;
       }
 
-      // Prepare submission data
       const submissionData = {
         title: formData.title,
         description: formData.description,
@@ -109,19 +144,19 @@ export default function CreateListingPage() {  const router = useRouter();
         subCategory: formData.subCategory,
         price: parseFloat(formData.price),
         pricingType: formData.pricingType,
-        condition: formData.category === 'item' ? formData.condition : undefined,
-        images: formData.imageUrls,
+        condition: formData.category === "item" ? formData.condition : undefined,
+        images: formData.images,
         visibility: formData.visibility,
-        tags: formData.tags
+        tags: formData.tags,
+        locations: formData.locations,
       };
 
       console.log("Submitting listing data:", submissionData);
 
-      // Submit to API
-      const response = await fetch('/api/listings', {
-        method: 'POST',
+      const response = await fetch("/api/listings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(submissionData),
       });
@@ -129,23 +164,27 @@ export default function CreateListingPage() {  const router = useRouter();
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create listing');
+        throw new Error(result.error || "Failed to create listing");
       }
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to create listing');
+        throw new Error(result.error || "Failed to create listing");
       }
 
-      console.log('Listing created successfully:', result.data);
-      
-      // Show success message (you can replace with a toast notification)
-      alert('Listing created successfully!');
+      console.log("Listing created successfully:", result.data);
 
-      // Redirect to my listings page
+      toast.success("Listing created successfully!", {
+        style: { background: "#22c55e", color: "#fff" },
+      });
+
       router.push("/my-listings");
     } catch (error) {
       console.error("Error submitting listing:", error);
-      alert(`Error creating listing: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Error creating listing: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -173,17 +212,11 @@ export default function CreateListingPage() {  const router = useRouter();
     exit: { y: -20, opacity: 0 },
   };
 
-  const getStepContent = () => {
+  const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <motion.div
-            key="step1"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
+          <motion.div key="step1" variants={containerVariants} className="space-y-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center">
               <TbEdit className="mr-2 text-blue-600" /> Basic Information
             </h2>
@@ -336,7 +369,7 @@ export default function CreateListingPage() {  const router = useRouter();
                   onClick={() => setCurrentStep(2)}
                   className="px-6 py-3 bg-blue-600 text-white rounded-full font-medium flex items-center"
                 >
-                  Next: Pricing & Visibility
+                  Next: Add Locations
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 ml-1"
@@ -364,6 +397,129 @@ export default function CreateListingPage() {  const router = useRouter();
             animate="visible"
             exit="exit"
           >
+            <h2 className="text-2xl font-bold mb-6 flex items-center">
+              <TbMapPin className="mr-2 text-blue-600" /> Add Locations
+            </h2>
+
+            <motion.div className="space-y-6" variants={containerVariants}>
+              <motion.div variants={itemVariants}>
+                <div className="text-center mb-6">
+                  <TbMapPin className="mx-auto text-blue-600 mb-3" size={48} />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Add Locations</h2>
+                  <p className="text-gray-600">
+                    Add pickup or meeting locations for your listing. Buyers can choose their preferred location.
+                  </p>
+                </div>
+
+                {/* University Location Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center">
+                    <FaUniversity className="text-blue-600 mr-3 text-xl" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-blue-900">University Location</h3>
+                      <p className="text-sm text-blue-700">
+                        Stanford University will be automatically added as a pickup location
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Locations */}
+                {formData.locations.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="font-medium text-gray-900 mb-3">Selected Locations</h3>
+                    <div className="space-y-2">
+                      {formData.locations.map((location, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                        >
+                          <div className="flex items-center">
+                            {location.isUniversity ? (
+                              <FaUniversity className="text-blue-600 mr-3" />
+                            ) : (
+                              <TbMapPin className="text-gray-600 mr-3" />
+                            )}
+                            <div>
+                              <p className="font-medium">
+                                {location.name || `Location ${index + 1}`}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {location.coordinates[1].toFixed(4)}, {location.coordinates[0].toFixed(4)}
+                              </p>
+                            </div>
+                          </div>
+                          {!location.isUniversity && (
+                            <button
+                              onClick={() => handleLocationRemove(index)}
+                              className="text-red-600 hover:text-red-800 p-1"
+                            >
+                              <TbX size={18} />
+                            </button>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Map Component */}
+                <div className="bg-gray-100 rounded-lg overflow-hidden" style={{ height: '400px' }}>
+                  <LocationMapComponent
+                    onLocationSelect={handleLocationAdd}
+                    existingLocations={formData.locations}
+                    userUniversity="Stanford University"
+                  />
+                </div>
+
+                <div className="text-sm text-gray-500 mt-2">
+                  <p>💡 Tip: Search for locations or click directly on the map to add pickup points</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                variants={itemVariants}
+                className="flex justify-between"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setCurrentStep(1)}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium flex items-center hover:bg-gray-50"
+                >
+                  <TbArrowLeft className="mr-1" />
+                  Back
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setCurrentStep(3)}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-full font-medium flex items-center"
+                >
+                  Next: Pricing & Visibility
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 ml-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div key="step3" variants={containerVariants} className="space-y-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center">
               <FaCoins className="mr-2 text-blue-600" /> Pricing & Visibility
             </h2>
@@ -510,27 +666,16 @@ export default function CreateListingPage() {  const router = useRouter();
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => setCurrentStep(2)}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium flex items-center hover:bg-gray-50"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-1"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <TbArrowLeft className="mr-1" />
                   Back
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(4)}
                   className="px-6 py-3 bg-blue-600 text-white rounded-full font-medium flex items-center"
                 >
                   Next: Add Images
@@ -550,20 +695,21 @@ export default function CreateListingPage() {  const router = useRouter();
               </motion.div>
             </motion.div>
           </motion.div>
-        );      case 3:
+        );
+
+      case 4:
         return (
           <motion.div
-            key="step3"
+            key="step4"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-          >            <h2 className="text-2xl font-bold mb-6 flex items-center">
+          >
+            <h2 className="text-2xl font-bold mb-6 flex items-center">
               <FaCamera className="mr-2 text-blue-600" /> Add Images
             </h2>
-
             <motion.div className="space-y-6" variants={containerVariants}>
-              {/* Image Upload Component */}
               <motion.div variants={itemVariants}>
                 <ImageUploadComponent
                   onUploadSuccess={handleImageUploadSuccess}
@@ -579,7 +725,7 @@ export default function CreateListingPage() {  const router = useRouter();
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => setCurrentStep(3)}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium flex items-center hover:bg-gray-50"
                 >
                   <TbArrowLeft className="mr-1" />
@@ -706,7 +852,7 @@ export default function CreateListingPage() {  const router = useRouter();
               >
                 2
               </motion.div>
-              <span className="ml-2 font-medium">Pricing</span>
+              <span className="ml-2 font-medium">Location</span>
             </div>
 
             <div className="w-12 h-0.5 bg-gray-300 self-center"></div>
@@ -726,12 +872,32 @@ export default function CreateListingPage() {  const router = useRouter();
               >
                 3
               </motion.div>
+              <span className="ml-2 font-medium">Pricing</span>
+            </div>
+
+            <div className="w-12 h-0.5 bg-gray-300 self-center"></div>
+
+            <div
+              className={`relative flex items-center ${
+                currentStep >= 4 ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
+              <motion.div
+                initial={false}
+                animate={{
+                  scale: currentStep === 4 ? 1.1 : 1,
+                  backgroundColor: currentStep >= 4 ? "#2563eb" : "#d1d5db",
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+              >
+                4
+              </motion.div>
               <span className="ml-2 font-medium">Images</span>
             </div>
           </div>
         </div>
 
-        <form onSubmit={(e) => e.preventDefault()}>{getStepContent()}</form>
+        <form onSubmit={(e) => e.preventDefault()}>{renderStep()}</form>
       </motion.div>
     </div>
   );
