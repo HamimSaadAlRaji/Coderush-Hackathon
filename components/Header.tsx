@@ -10,6 +10,15 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "@/components/ui/NavbarComponents";
+import type { Metadata } from 'next'
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
@@ -52,9 +61,16 @@ export function Header() {
             <NavbarButton variant="secondary" onClick={() => router.push("/sign-in")}>
               Login
             </NavbarButton>
-            <NavbarButton variant="primary" onClick={handleGetStarted}>
-              Get Started
-            </NavbarButton>
+            <SignedOut>
+              <NavbarButton variant="primary" onClick={handleGetStarted}>
+              
+                Get Started
+              
+              </NavbarButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
           </div>
         </NavBody>
 
@@ -84,16 +100,21 @@ export function Header() {
               >
                 Login
               </NavbarButton>
-              <NavbarButton
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  router.push("/sign-in");
-                }}
-                variant="primary"
-                className="w-full"
-              >
-                Get Started
-              </NavbarButton>
+              <SignedOut>
+                <NavbarButton
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    router.push("/sign-in");
+                  }}
+                  variant="primary"
+                  className="w-full"
+                >
+                  Get Started
+                </NavbarButton>
+              </SignedOut>
+              <SignedIn>
+              <UserButton />
+            </SignedIn>
             </div>
           </MobileNavMenu>
         </MobileNav>
