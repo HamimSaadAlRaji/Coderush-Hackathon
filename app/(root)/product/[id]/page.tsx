@@ -24,6 +24,7 @@ import {
   TbChevronRight,
   TbAlertCircle,
   TbStar,
+  TbLoader2,
 } from "react-icons/tb";
 import { FaUniversity } from "react-icons/fa";
 import { toast } from "sonner";
@@ -32,36 +33,26 @@ interface Listing {
   _id: string;
   title: string;
   description: string;
-  category: "item" | "service";
-  subCategory: string;
   price: number;
-  pricingType: "fixed" | "bidding" | "hourly";
-  currentBid?: number;
-  bids?: Array<{
-    userId: string;
-    amount: number;
-    createdAt: Date;
-  }>;
-  condition?: "new" | "likeNew" | "good" | "fair" | "poor";
+  category: string;
+  subCategory?: string;
+  condition?: string;
   images: string[];
   sellerId: string;
   sellerUniversity: string;
-  visibility: "university" | "all";
+  pricingType: "fixed" | "negotiable" | "auction";
   status: "active" | "sold" | "expired" | "removed";
+  tags: string[];
+  views: number;
   createdAt: Date;
   updatedAt: Date;
-  tags?: string[];
-  locations?: Array<{
-    type: "Point";
-    coordinates: [number, number];
-  }>;
-  editedFields?: string[];
+  editedFields: string[];
 }
 
 interface SellerInfo {
   name: string;
-  university?: string;
-  rating?: number;
+  university: string;
+  rating: number;
 }
 
 export default function ProductPage() {
@@ -69,17 +60,18 @@ export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
+
   const [listing, setListing] = useState<Listing | null>(null);
   const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [bidAmount, setBidAmount] = useState("");
-  const [editFormData, setEditFormData] = useState<Partial<Listing>>({});
-  const [editedFields, setEditedFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Fetch listing data from API
+  const [isOwner, setIsOwner] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isMessaging, setIsMessaging] = useState(false);
+
   useEffect(() => {
     const fetchListing = async () => {
       try {
@@ -102,7 +94,7 @@ export default function ProductPage() {
             ...listingData,
             createdAt: new Date(listingData.createdAt),
             updatedAt: new Date(listingData.updatedAt),
-            editedFields: []
+            editedFields: [],
           });
 
           // Check if current user is the owner
@@ -158,818 +150,459 @@ export default function ProductPage() {
       fetchListing();
     }
   }, [productId, user?.id, isLoaded]);
-  if (!isLoaded || loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Back Button Skeleton */}
-        <motion.div
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="mb-6"
-        >
-          <Skeleton className="h-6 w-32 rounded-lg" />
-        </motion.div>
 
-        <motion.div
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ staggerChildren: 0.1 }}
-        >
-          {/* Image Gallery Skeleton */}
-          <motion.div 
-            className="space-y-4"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            {/* Main Image Skeleton */}
-            <div className="relative bg-gray-100 rounded-xl overflow-hidden aspect-square">
-              <Skeleton className="w-full h-full rounded-xl" />
-              
-              {/* Navigation Buttons Skeleton */}
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <Skeleton className="w-10 h-10 rounded-full" />
-              </div>
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <Skeleton className="w-10 h-10 rounded-full" />
-              </div>
-
-              {/* Dot Indicators Skeleton */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                {[...Array(3)].map((_, index) => (
-                  <Skeleton key={index} className="w-2 h-2 rounded-full" />
-                ))}
-              </div>
-            </div>
-
-            {/* Thumbnail Strip Skeleton */}
-            <div className="flex space-x-2 overflow-x-auto">
-              {[...Array(4)].map((_, index) => (
-                <Skeleton key={index} className="flex-shrink-0 w-20 h-20 rounded-lg" />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Product Details Skeleton */}
-          <motion.div 
-            className="space-y-6"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            {/* Header Skeleton */}
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <Skeleton className="h-8 w-4/5 rounded-lg mb-2" />
-                <div className="flex items-center space-x-2">
-                  <Skeleton className="h-4 w-4 rounded" />
-                  <Skeleton className="h-4 w-32 rounded-lg" />
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <Skeleton className="w-10 h-10 rounded-full" />
-              </div>
-            </div>
-
-            {/* Price & Bidding Skeleton */}
-            <motion.div 
-              className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6"
-              animate={{ 
-                background: [
-                  "linear-gradient(to right, rgb(239 246 255), rgb(219 234 254))",
-                  "linear-gradient(to right, rgb(219 234 254), rgb(239 246 255))",
-                  "linear-gradient(to right, rgb(239 246 255), rgb(219 234 254))"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <Skeleton className="h-4 w-20 rounded-lg mb-2" />
-                  <div className="flex items-center">
-                    <Skeleton className="h-8 w-8 rounded mr-2" />
-                    <Skeleton className="h-8 w-24 rounded-lg" />
-                  </div>
-                </div>
-                <Skeleton className="w-8 h-8 rounded" />
-              </div>
-              
-              {/* Bidding Input Skeleton */}
-              <div className="space-y-3">
-                <div className="flex space-x-2">
-                  <Skeleton className="flex-1 h-10 rounded-lg" />
-                  <Skeleton className="w-16 h-10 rounded-lg" />
-                </div>
-                <Skeleton className="h-3 w-32 rounded-lg" />
-              </div>
-            </motion.div>
-
-            {/* Seller Info Skeleton */}
-            <motion.div 
-              className="bg-white border border-gray-200 rounded-xl p-4"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <div className="flex items-center mb-3">
-                <Skeleton className="w-4 h-4 rounded mr-2" />
-                <Skeleton className="h-5 w-32 rounded-lg" />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Skeleton className="w-10 h-10 rounded-full mr-3" />
-                  <div>
-                    <Skeleton className="h-4 w-24 rounded-lg mb-1" />
-                    <div className="flex items-center">
-                      <Skeleton className="w-3 h-3 rounded mr-1" />
-                      <Skeleton className="h-3 w-32 rounded-lg" />
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Skeleton className="w-4 h-4 rounded mr-1" />
-                  <Skeleton className="h-4 w-8 rounded-lg" />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Action Button Skeleton */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Skeleton className="w-full h-12 rounded-lg" />
-            </motion.div>
-
-            {/* Product Details Skeleton */}
-            <motion.div 
-              className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
-              animate={{ borderColor: ["rgb(229 231 235)", "rgb(219 234 254)", "rgb(229 231 235)"] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <div className="flex items-center">
-                <Skeleton className="w-4 h-4 rounded mr-2" />
-                <Skeleton className="h-5 w-28 rounded-lg" />
-              </div>
-
-              {/* Grid Details Skeleton */}
-              <div className="grid grid-cols-2 gap-4">
-                {[...Array(4)].map((_, index) => (
-                  <motion.div 
-                    key={index}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                  >
-                    <Skeleton className="h-3 w-16 rounded-lg mb-1" />
-                    <Skeleton className="h-4 w-20 rounded-lg" />
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Description Skeleton */}
-              <div>
-                <Skeleton className="h-3 w-20 rounded-lg mb-2" />
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-full rounded-lg" />
-                  <Skeleton className="h-3 w-4/5 rounded-lg" />
-                  <Skeleton className="h-3 w-3/5 rounded-lg" />
-                </div>
-              </div>
-
-              {/* Tags Skeleton */}
-              <div>
-                <Skeleton className="h-3 w-12 rounded-lg mb-2" />
-                <div className="flex flex-wrap gap-2">
-                  {[...Array(3)].map((_, index) => (
-                    <motion.div
-                      key={index}
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ duration: 2, delay: index * 0.2, repeat: Infinity }}
-                    >
-                      <Skeleton className="h-6 w-16 rounded-full" />
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Location Skeleton */}
-              <div>
-                <div className="flex items-center mb-2">
-                  <Skeleton className="w-3 h-3 rounded mr-1" />
-                  <Skeleton className="h-3 w-24 rounded-lg" />
-                </div>
-                <motion.div 
-                  className="bg-gray-100 rounded-lg p-3"
-                  animate={{ backgroundColor: ["rgb(243 244 246)", "rgb(249 250 251)", "rgb(243 244 246)"] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Skeleton className="h-3 w-40 rounded-lg mb-1" />
-                  <Skeleton className="h-3 w-20 rounded-lg" />
-                </motion.div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Floating Loading Indicator */}
-        <motion.div
-          className="fixed bottom-8 right-8 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center"
-          animate={{ 
-            y: [0, -5, 0],
-            boxShadow: [
-              "0 10px 25px rgba(0,0,0,0.1)",
-              "0 15px 35px rgba(0,0,0,0.15)",
-              "0 10px 25px rgba(0,0,0,0.1)"
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <motion.div
-            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <span className="text-sm font-medium">Loading...</span>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!listing) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Listing Not Found
-          </h1>
-          <p className="text-gray-600 mb-4">
-            The listing you're looking for doesn't exist.
-          </p>
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-  const handleEdit = (field: string, value: string | number) => {
-    setEditFormData((prev) => ({ ...prev, [field]: value }));
-    if (!editedFields.includes(field)) {
-      setEditedFields((prev) => [...prev, field]);
-    }
-  };
-
-  const saveChanges = () => {
-    // In real app, send to API
-    setListing((prev) =>
-      prev ? { ...prev, ...editFormData, editedFields } : null
-    );
-    setIsEditing(false);
-  };
-
-  const cancelEdit = () => {
-    setEditFormData(listing);
-    setEditedFields([]);
-    setIsEditing(false);
-  };
-  const placeBid = () => {
-    if (
-      !bidAmount ||
-      parseFloat(bidAmount) <= (listing?.currentBid || listing?.price || 0)
-    ) {
-      toast.error("Bid must be higher than current bid", {
-        style: { background: "#fee2e2", color: "#b91c1c" },
-      });
+  // Message seller function
+  const handleMessageSeller = async () => {
+    if (!user || !listing || isOwner) {
+      if (!user) {
+        toast.error("Please sign in to message the seller");
+        router.push("/sign-in");
+        return;
+      }
+      if (isOwner) {
+        toast.error("You cannot message yourself");
+        return;
+      }
       return;
     }
 
-    // In real app, send to API
-    const newBid = {
-      userId: user?.id || "current-user",
-      amount: parseFloat(bidAmount),
-      createdAt: new Date(),
-    };
+    setIsMessaging(true);
 
-    setListing((prev) =>
-      prev
-        ? {
-            ...prev,
-            currentBid: parseFloat(bidAmount),
-            bids: [...(prev.bids || []), newBid],
-          }
-        : null
-    );
+    try {
+      // Create or find existing conversation
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId: listing._id,
+          sellerId: listing.sellerId,
+          buyerId: user.id,
+        }),
+      });
 
-    // Show success toast
-    toast.success(
-      `Bid placed successfully! Your bid: $${parseFloat(bidAmount).toFixed(2)}`,
-      {
-        style: { background: "#dcfce7", color: "#166534" },
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create conversation");
       }
-    );
 
-    setBidAmount("");
+      if (result.success) {
+        const conversationId = result.data._id;
+        toast.success("Chat started successfully!");
+
+        // Redirect to the conversation
+        router.push(`/chat/${conversationId}`);
+      } else {
+        throw new Error(result.error || "Failed to create conversation");
+      }
+    } catch (err) {
+      console.error("Error creating conversation:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to start conversation"
+      );
+    } finally {
+      setIsMessaging(false);
+    }
   };
 
-  const startChat = () => {
-    // In real app, initiate chat with seller
-    alert("Chat feature would be implemented here");
-  };
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % (listing?.images.length || 1));
+    if (listing && listing.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === listing.images.length - 1 ? 0 : prev + 1
+      );
+    }
   };
 
-  const previousImage = () => {
-    setCurrentImageIndex(
-      (prev) =>
-        (prev - 1 + (listing?.images.length || 1)) %
-        (listing?.images.length || 1)
-    );
+  const prevImage = () => {
+    if (listing && listing.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? listing.images.length - 1 : prev - 1
+      );
+    }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
+  const handleSaveEdit = async () => {
+    if (!listing || !editFormData) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/listings/${listing._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editFormData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update listing");
+      }
+
+      if (result.success) {
+        setListing((prev) => (prev ? { ...prev, ...editFormData } : null));
+        setIsEditing(false);
+        toast.success("Listing updated successfully!");
+      } else {
+        throw new Error(result.error || "Failed to update listing");
+      }
+    } catch (err) {
+      console.error("Error updating listing:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update listing"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
-  };
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Back Button */}
-      <motion.button
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        onClick={() => router.back()}
-        className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
-      >
-        <TbChevronLeft className="mr-1" />
-        Back to Listings
-      </motion.button>
-
-      <motion.div
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Image Gallery */}
-        <motion.div variants={itemVariants} className="space-y-4">
-          <div className="relative bg-gray-100 rounded-xl overflow-hidden aspect-square">
-            <Image
-              src={listing.images[currentImageIndex]}
-              alt={listing.title}
-              fill
-              style={{ objectFit: "cover" }}
-              className="transition-opacity duration-300"
-            />
-
-            {listing.images.length > 1 && (
-              <>
-                <button
-                  onClick={previousImage}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-colors"
-                >
-                  <TbChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-colors"
-                >
-                  <TbChevronRight size={20} />
-                </button>
-              </>
-            )}
-
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {listing.images.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentImageIndex ? "bg-white" : "bg-white/50"
-                  }`}
-                />
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Image Gallery Skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="aspect-square rounded-lg" />
+            <div className="grid grid-cols-4 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-lg" />
               ))}
             </div>
           </div>
 
-          {/* Thumbnail Strip */}
-          {listing.images.length > 1 && (
-            <div className="flex space-x-2 overflow-x-auto">
+          {/* Product Info Skeleton */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+
+            <div className="space-y-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-16"
+        >
+          <TbAlertCircle className="mx-auto text-red-500 text-6xl mb-4" />
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            {error || "Listing not found"}
+          </h1>
+          <p className="text-gray-600 mb-4">
+            The listing you're looking for doesn't exist or has been removed.
+          </p>
+          <button
+            onClick={() => router.push("/all-listings")}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Browse All Listings
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+      >
+        {/* Image Gallery */}
+        <div className="space-y-4">
+          <div className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden">
+            {listing.images && listing.images.length > 0 ? (
+              <>
+                <Image
+                  src={listing.images[currentImageIndex]}
+                  alt={listing.title}
+                  fill
+                  className="object-cover"
+                />
+                {listing.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
+                    >
+                      <TbChevronLeft />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
+                    >
+                      <TbChevronRight />
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <TbPackage className="text-gray-400 text-6xl" />
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnail Gallery */}
+          {listing.images && listing.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
               {listing.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                  className={`relative aspect-square bg-gray-200 rounded-lg overflow-hidden border-2 transition-all ${
                     index === currentImageIndex
                       ? "border-blue-500"
-                      : "border-gray-200"
+                      : "border-transparent hover:border-gray-300"
                   }`}
                 >
                   <Image
                     src={image}
                     alt={`${listing.title} ${index + 1}`}
-                    width={80}
-                    height={80}
-                    style={{ objectFit: "cover" }}
-                    className="w-full h-full"
+                    fill
+                    className="object-cover"
                   />
                 </button>
               ))}
             </div>
           )}
-        </motion.div>
+        </div>
 
-        {/* Product Details */}
-        <motion.div variants={itemVariants} className="space-y-6">
+        {/* Product Information */}
+        <div className="space-y-6">
           {/* Header */}
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              {isEditing && isOwner ? (
-                <input
-                  type="text"
-                  value={editFormData.title}
-                  onChange={(e) => handleEdit("title", e.target.value)}
-                  className="text-2xl font-bold w-full border-b-2 border-blue-500 bg-transparent outline-none"
-                />
-              ) : (
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                  {listing.title}
-                  {listing.editedFields?.includes("title") && (
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                      Edited
-                    </span>
-                  )}
-                </h1>
-              )}
-
-              <div className="flex items-center mt-2 text-sm text-gray-600">
-                <TbClock className="mr-1" />
-                Listed {new Date(listing.createdAt).toLocaleDateString()}
-                {new Date(listing.updatedAt) > new Date(listing.createdAt) && (
-                  <span className="ml-2 text-yellow-600">
-                    • Updated {new Date(listing.updatedAt).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex space-x-2">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 text-gray-500 hover:text-red-500 rounded-full hover:bg-red-50"
-              >
-                <TbHeart size={24} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 text-gray-500 hover:text-blue-500 rounded-full hover:bg-blue-50"
-              >
-                <TbShare size={24} />
-              </motion.button>
-            </div>
-          </div>
-          {/* Price & Bidding */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6">
-            {listing.pricingType === "bidding" ? (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Current Bid</p>
-                    <p className="text-3xl font-bold text-blue-600 flex items-center">
-                      <TbCurrencyDollar />
-                      {listing.currentBid?.toFixed(2) ||
-                        listing.price.toFixed(2)}
-                    </p>
-                  </div>
-                  <TbGavel className="text-blue-600 text-3xl" />
-                </div>
-
-                {!isOwner && (
-                  <div className="space-y-3">
-                    <div className="flex space-x-2">
-                      <input
-                        type="number"
-                        value={bidAmount}
-                        onChange={(e) => setBidAmount(e.target.value)}
-                        placeholder="Enter bid amount"
-                        min={(listing.currentBid || listing.price) + 0.01}
-                        step="0.01"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={placeBid}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium"
-                      >
-                        Bid
-                      </motion.button>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Minimum bid: $
-                      {((listing.currentBid || listing.price) + 0.01).toFixed(
-                        2
-                      )}
-                    </p>
-                  </div>
-                )}
-
-                {listing.bids && listing.bids.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-blue-200">
-                    <p className="text-sm font-medium text-gray-700 mb-2">
-                      Recent Bids
-                    </p>
-                    <div className="space-y-1 max-h-24 overflow-y-auto">
-                      {listing.bids
-                        .slice(-3)
-                        .reverse()
-                        .map((bid, index) => (
-                          <div
-                            key={index}
-                            className="flex justify-between text-xs text-gray-600"
-                          >
-                            <span>Bidder {bid.userId.slice(-4)}</span>
-                            <span>${bid.amount.toFixed(2)}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div className="space-y-4">
+            {isEditing && isOwner ? (
+              <input
+                type="text"
+                value={editFormData.title || ""}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, title: e.target.value })
+                }
+                className="text-3xl font-bold text-gray-900 w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
             ) : (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">
-                    {listing.pricingType === "hourly" ? "Hourly Rate" : "Price"}
-                  </p>
-                  {isEditing && isOwner ? (
-                    <div className="flex items-center">
-                      <TbCurrencyDollar className="text-2xl text-blue-600" />
-                      <input
-                        type="number"
-                        value={editFormData.price}
-                        onChange={(e) =>
-                          handleEdit("price", parseFloat(e.target.value))
-                        }
-                        className="text-2xl font-bold text-blue-600 bg-transparent border-b-2 border-blue-500 outline-none w-32"
-                        step="0.01"
-                        min="0"
-                      />
-                    </div>
-                  ) : (
-                    <p className="text-3xl font-bold text-blue-600 flex items-center">
-                      <TbCurrencyDollar />
-                      {listing.price.toFixed(2)}
-                      {listing.pricingType === "hourly" && (
-                        <span className="text-lg">/hr</span>
-                      )}
-                      {listing.editedFields?.includes("price") && (
-                        <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                          Edited
-                        </span>
-                      )}
-                    </p>
-                  )}
-                </div>
-                <TbTag className="text-blue-600 text-3xl" />
-              </div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {listing.title}
+              </h1>
             )}
-          </div>{" "}
-          {/* Seller Info */}
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
-            <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-              <TbUser className="mr-2 text-blue-600" />
-              Seller Information
-            </h3>
-            <div className="space-y-2">
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="text-3xl font-bold text-blue-600">
+                  ${listing.price.toFixed(2)}
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    listing.pricingType === "auction"
+                      ? "bg-red-100 text-red-700"
+                      : listing.pricingType === "negotiable"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {listing.pricingType}
+                </span>
+              </div>
+
+              {isOwner && (
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  {isEditing ? <TbX /> : <TbEdit />}
+                  <span>{isEditing ? "Cancel" : "Edit"}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span className="flex items-center">
+                <TbTag className="mr-1" />
+                {listing.category}
+              </span>
+              <span className="flex items-center">
+                <TbMapPin className="mr-1" />
+                {listing.sellerUniversity}
+              </span>
+              <span className="flex items-center">
+                <TbClock className="mr-1" />
+                {listing.createdAt.toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-900">Description</h3>
+            {isEditing && isOwner ? (
+              <textarea
+                value={editFormData.description || ""}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    description: e.target.value,
+                  })
+                }
+                rows={6}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            ) : (
+              <p className="text-gray-700 leading-relaxed">
+                {listing.description}
+              </p>
+            )}
+          </div>
+
+          {/* Seller Information */}
+          {sellerInfo && (
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Seller Information
+              </h3>
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                    <TbUser className="text-blue-600" />
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">
+                    {sellerInfo.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-medium">
-                      {sellerInfo?.name || "Unknown User"}
+                    <p className="font-medium text-gray-900">
+                      {sellerInfo.name}
                     </p>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaUniversity className="mr-1" />
-                      {sellerInfo?.university ||
-                        listing.sellerUniversity ||
-                        "Unknown University"}
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <FaUniversity className="text-xs" />
+                      <span>{sellerInfo.university}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center text-yellow-500">
-                  <TbStar className="mr-1" />
+                <div className="flex items-center space-x-1">
+                  <TbStar className="text-yellow-500 fill-current" />
                   <span className="text-sm font-medium">
-                    {sellerInfo?.rating?.toFixed(1) || "4.8"}
+                    {sellerInfo.rating}
                   </span>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
           {/* Action Buttons */}
-          {isOwner ? (
-            <div className="flex space-x-3">
-              {isEditing ? (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={saveChanges}
-                    className="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium flex items-center justify-center"
-                  >
+          <div className="space-y-3">
+            {isEditing && isOwner ? (
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSaving}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isSaving ? (
+                  <>
+                    <TbLoader2 className="mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
                     <TbCheck className="mr-2" />
                     Save Changes
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={cancelEdit}
-                    className="flex-1 bg-gray-600 text-white py-3 rounded-lg font-medium flex items-center justify-center"
-                  >
-                    <TbX className="mr-2" />
-                    Cancel
-                  </motion.button>
-                </>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsEditing(true)}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium flex items-center justify-center"
+                  </>
+                )}
+              </button>
+            ) : !isOwner ? (
+              <>
+                <button
+                  onClick={handleMessageSeller}
+                  disabled={isMessaging}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  <TbEdit className="mr-2" />
-                  Edit Listing
-                </motion.button>
-              )}
-            </div>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={startChat}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 rounded-lg font-medium flex items-center justify-center shadow-lg"
-            >
-              <TbMessage className="mr-2" />
-              Message Seller
-            </motion.button>
-          )}
-          {/* Product Details */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-            <h3 className="font-medium text-gray-900 flex items-center">
-              <TbPackage className="mr-2 text-blue-600" />
-              Product Details
-            </h3>
+                  {isMessaging ? (
+                    <>
+                      <TbLoader2 className="mr-2 animate-spin" />
+                      Starting Chat...
+                    </>
+                  ) : (
+                    <>
+                      <TbMessage className="mr-2" />
+                      Message Seller
+                    </>
+                  )}
+                </button>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="flex items-center justify-center space-x-2 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <TbHeart />
+                    <span>Save</span>
+                  </button>
+                  <button className="flex items-center justify-center space-x-2 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <TbShare />
+                    <span>Share</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4 text-gray-600">
+                <TbUser className="mx-auto text-2xl mb-2" />
+                <p>This is your listing</p>
+              </div>
+            )}
+          </div>
+
+          {/* Additional Details */}
+          <div className="space-y-4 pt-4 border-t border-gray-200">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-600">Category</p>
-                <p className="font-medium capitalize">{listing.category}</p>
+                <span className="text-gray-600">Status:</span>
+                <p className="font-medium capitalize">{listing.status}</p>
               </div>
               <div>
-                <p className="text-gray-600">Subcategory</p>
-                <p className="font-medium capitalize">{listing.subCategory}</p>
+                <span className="text-gray-600">Views:</span>
+                <p className="font-medium">{listing.views || 0}</p>
               </div>
               {listing.condition && (
                 <div>
-                  <p className="text-gray-600">Condition</p>
-                  {isEditing && isOwner ? (
-                    <select
-                      value={editFormData.condition}
-                      onChange={(e) => handleEdit("condition", e.target.value)}
-                      className="font-medium capitalize border border-gray-300 rounded px-2 py-1"
-                    >
-                      <option value="new">New</option>
-                      <option value="likeNew">Like New</option>
-                      <option value="good">Good</option>
-                      <option value="fair">Fair</option>
-                      <option value="poor">Poor</option>
-                    </select>
-                  ) : (
-                    <p className="font-medium capitalize flex items-center">
-                      {listing.condition}
-                      {listing.editedFields?.includes("condition") && (
-                        <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                          Edited
-                        </span>
-                      )}
-                    </p>
-                  )}
+                  <span className="text-gray-600">Condition:</span>
+                  <p className="font-medium">{listing.condition}</p>
                 </div>
               )}
               <div>
-                <p className="text-gray-600">Visibility</p>
-                <p className="font-medium capitalize">{listing.visibility}</p>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-gray-600 mb-2">Description</p>
-              {isEditing && isOwner ? (
-                <textarea
-                  value={editFormData.description}
-                  onChange={(e) => handleEdit("description", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={4}
-                />
-              ) : (
-                <p className="text-gray-900">
-                  {listing.description}
-                  {listing.editedFields?.includes("description") && (
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                      Edited
-                    </span>
-                  )}
+                <span className="text-gray-600">Listed:</span>
+                <p className="font-medium">
+                  {listing.createdAt.toLocaleDateString()}
                 </p>
-              )}
+              </div>
             </div>
 
             {listing.tags && listing.tags.length > 0 && (
               <div>
-                <p className="text-gray-600 mb-2">Tags</p>
-                <div className="flex flex-wrap gap-2">
+                <span className="text-gray-600 text-sm">Tags:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
                   {listing.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                      className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
                     >
-                      #{tag}
+                      {tag}
                     </span>
                   ))}
                 </div>
               </div>
             )}
-
-            {listing.locations && listing.locations.length > 0 && (
-              <div>
-                <p className="text-gray-600 mb-2 flex items-center">
-                  <TbMapPin className="mr-1" />
-                  Pickup Location
-                </p>
-                <div className="bg-gray-100 rounded-lg p-3 text-sm text-gray-700">
-                  Coordinates: {listing.locations[0].coordinates[1].toFixed(4)},{" "}
-                  {listing.locations[0].coordinates[0].toFixed(4)}
-                  <br />
-                  <span className="text-blue-600 cursor-pointer hover:underline">
-                    View on Map
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
-          {/* Status Alerts */}
-          {listing.status !== "active" && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
-              <TbAlertCircle className="text-yellow-600 mr-3" />
-              <p className="text-yellow-800">
-                This listing is currently{" "}
-                <span className="font-medium">{listing.status}</span>
-              </p>
-            </div>
-          )}
-          {editedFields.length > 0 && isOwner && !isEditing && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-800 text-sm">
-                <TbAlertCircle className="inline mr-2" />
-                Some fields have been edited since the original listing. Edited
-                fields are marked with "Edited" labels.
-              </p>
-            </div>
-          )}
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );

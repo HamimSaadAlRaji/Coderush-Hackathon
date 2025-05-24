@@ -588,7 +588,7 @@ export default function AllListingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
         >
           <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
             <TbPackage className="mx-auto text-blue-600 text-3xl mb-2" />
@@ -596,13 +596,6 @@ export default function AllListingsPage() {
               {stats.totalListings}
             </div>
             <div className="text-sm text-gray-600">Total Listings</div>
-          </div>
-          <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
-            <TbCurrencyDollar className="mx-auto text-green-600 text-3xl mb-2" />
-            <div className="text-2xl font-bold text-gray-900">
-              ${stats.averagePrice.toFixed(0)}
-            </div>
-            <div className="text-sm text-gray-600">Average Price</div>
           </div>
           <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
             <TbTag className="mx-auto text-purple-600 text-3xl mb-2" />

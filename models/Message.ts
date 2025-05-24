@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 interface Message {
   _id: string;
@@ -12,29 +12,52 @@ interface Message {
 
 interface Conversation {
   _id: string;
-  participants: string[]; // user IDs
-  listingId?: string; // if related to a listing
+  participants: string[]; // Clerk user IDs (strings)
+  listingId?: any; // Can be ObjectId or populated object
   lastMessage: string;
   lastMessageAt: Date;
   createdAt: Date;
 }
 
-const MessageSchema = new mongoose.Schema({
-  conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation', required: true },
-  senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  content: { type: String, required: true },
-  images: [{ type: String }],
-  read: { type: Boolean, default: false },
-}, { timestamps: true });
+const MessageSchema = new mongoose.Schema(
+  {
+    conversationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Conversation",
+      required: true,
+    },
+    senderId: { type: String, required: true }, // String for Clerk user ID
+    content: { type: String, required: true },
+    images: [{ type: String }],
+    read: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
 
-const ConversationSchema = new mongoose.Schema({
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }],
-  listingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-  lastMessage: { type: String, default: '' },
-  lastMessageAt: { type: Date, default: Date.now },
-}, { timestamps: true });
+const ConversationSchema = new mongoose.Schema(
+  {
+    participants: [{ type: String, required: true }], // Array of strings for Clerk user IDs
+    listingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Listing",
+      required: false,
+    },
+    lastMessage: { type: String, default: "" },
+    lastMessageAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
 
-export const MessageModel = mongoose.models.Message || mongoose.model('Message', MessageSchema);
-export const ConversationModel = mongoose.models.Conversation || mongoose.model('Conversation', ConversationSchema);
+// Add indexes for better performance
+ConversationSchema.index({ participants: 1 });
+ConversationSchema.index({ lastMessageAt: -1 });
+MessageSchema.index({ conversationId: 1, createdAt: -1 });
+
+// Clear the mongoose models cache to ensure new schema is used
+delete mongoose.models.Message;
+delete mongoose.models.Conversation;
+
+export const MessageModel = mongoose.model("Message", MessageSchema);
+export const ConversationModel = mongoose.model("Conversation", ConversationSchema);
 
 export type { Message, Conversation };

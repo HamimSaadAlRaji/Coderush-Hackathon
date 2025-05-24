@@ -13,7 +13,7 @@ export default function PostSignIn() {
 
     if (!role) {
       user?.update({ unsafeMetadata: { role: "user" } }).then(() => {
-        router.replace("/dashboard");
+        router.replace("/all-listings");
       });
       return;
     }
@@ -21,7 +21,7 @@ export default function PostSignIn() {
     if (role === "admin") {
       router.replace("/admin-dashboard");
     } else {
-      router.replace("/dashboard");
+      router.replace("/all-listings");
     }
   }, [user, isLoaded, router]);
 
