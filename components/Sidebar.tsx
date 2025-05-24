@@ -70,11 +70,11 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             }`}
           >
             <Link
-              href="/dashboard"
+              href="/all-listings"
               className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
-              title="Dashboard"
+              title="All Listings"
             >
               <MdDashboard
                 className={`transition-all duration-300 min-w-[24px] min-h-[24px] ${
@@ -84,7 +84,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               {!isOpen && (
                 <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all duration-300 origin-left">
                   <div className="bg-white text-sky-800 px-4 py-2 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] font-medium">
-                    Dashboard
+                    all-listings
                   </div>
                 </div>
               )}
@@ -93,7 +93,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                   isOpen ? "opacity-100" : "opacity-0 w-0"
                 }`}
               >
-                {isOpen && "Dashboard"}
+                {isOpen && "All-Listings"}
               </span>
             </Link>
           </div>
