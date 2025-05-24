@@ -270,7 +270,42 @@ export default function BasicInformation({
           </motion.div>
         )}
 
-        {/* ...existing code... */}
+        {formData.category === "item" && (
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <label
+              htmlFor="usedForMonths"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Used for (months) <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              id="usedForMonths"
+              name="usedForMonths"
+              value={formData.usedForMonths || ""}
+              onChange={handleChange}
+              required
+              min="0"
+              max="120"
+              placeholder="e.g., 6"
+              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+                validationErrors.usedForMonths ? "border-red-300" : "border-gray-300"
+              }`}
+            />
+            {validationErrors.usedForMonths && (
+              <p className="text-red-500 text-sm mt-1">
+                {validationErrors.usedForMonths}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              How long have you used this item? (0 for never used)
+            </p>
+          </motion.div>
+        )}
 
         <motion.div variants={itemVariants}>
           <label

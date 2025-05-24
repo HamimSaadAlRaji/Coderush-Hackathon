@@ -27,6 +27,7 @@ interface ValidationErrors {
   title?: string;
   description?: string;
   subCategory?: string;
+  usedForMonths?: string;
   condition?: string;
   price?: string;
   pricingType?: string;
@@ -52,6 +53,7 @@ export default function CreateListingPage() {
     images: [] as string[],
     visibility: "university",
     tags: "",
+    usedForMonths: "",
     locations: [] as LocationPoint[],
   });
 
@@ -144,32 +146,41 @@ export default function CreateListingPage() {
   };
 
   const validateStep2 = (): boolean => {
-    const errors: ValidationErrors = {};
+  const errors: ValidationErrors = {};
 
-    if (!formData.title.trim()) {
-      errors.title = "Title is required";
-    } else if (formData.title.trim().length < 5) {
-      errors.title = "Title must be at least 5 characters long";
+  if (!formData.title.trim()) {
+    errors.title = "Title is required";
+  } else if (formData.title.trim().length < 5) {
+    errors.title = "Title must be at least 5 characters long";
+  }
+
+  if (!formData.description.trim()) {
+    errors.description = "Description is required";
+  } else if (formData.description.trim().length < 20) {
+    errors.description = "Description must be at least 20 characters long";
+  }
+
+  if (!formData.subCategory) {
+    errors.subCategory = "Please select a subcategory";
+  }
+
+  // For items, condition is required
+  if (formData.category === "item" && !formData.condition) {
+    errors.condition = "Please select the item condition";
+  }
+
+  // For items, usedForMonths is required
+  if (formData.category === "item") {
+    if (!formData.usedForMonths && formData.usedForMonths !== 0) {
+      errors.usedForMonths = "Please specify how long you've used this item";
+    } else if (formData.usedForMonths < 0 || formData.usedForMonths > 120) {
+      errors.usedForMonths = "Usage period must be between 0 and 120 months";
     }
+  }
 
-    if (!formData.description.trim()) {
-      errors.description = "Description is required";
-    } else if (formData.description.trim().length < 20) {
-      errors.description = "Description must be at least 20 characters long";
-    }
-
-    if (!formData.subCategory) {
-      errors.subCategory = "Please select a subcategory";
-    }
-
-    // For items, condition is required
-    if (formData.category === "item" && !formData.condition) {
-      errors.condition = "Please select the item condition";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  setValidationErrors(errors);
+  return Object.keys(errors).length === 0;
+};
 
   const validateStep3 = (): boolean => {
     const errors: ValidationErrors = {};
