@@ -33,7 +33,7 @@ const VALID_CONDITIONS: ProductCondition[] = ['New', 'Like New', 'Good', 'Fair',
 const ANALYSIS_PROMPT = `
 You want to add a product to a second-hand marketplace listing. Analyze the provided product image and return the following information in JSON format: 
 1. Product name (be specific about brand, model, type). If the product name is not clear, use a generic name like "Smartphone" or "Laptop.
-2. Condition assessment (choose ONE: 'new', 'likeNew', 'good', 'fair', 'poor')
+2. Condition assessment (choose ONE: 'New', 'Like New', 'Good', 'Fair', 'Poor')
 3. Description of the product and its condition
 
 Condition criteria:
