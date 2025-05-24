@@ -1,31 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { MessageModel } from '@/models/Message';
-import { connectToMongoDB } from '@/lib/mongodb';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from "next/server";
+import { MessageModel } from "@/models/Message";
+import dbConnect from "@/lib/dbconnect";
+import { auth } from "@clerk/nextjs/server";
 
-export async function POST(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    await connectToMongoDB();
-    const session = await getServerSession();
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await dbConnect();
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = await request.json();
-
     await MessageModel.updateMany(
-      { 
-        conversationId: conversationId,
-        senderId: { $ne: session.user.id },
-        read: false
+      {
+        conversationId: params.id,
+        senderId: { $ne: userId }, // Using Clerk user ID
+        read: false,
       },
       { read: true }
     );
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error marking messages as read:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error marking messages as read:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
