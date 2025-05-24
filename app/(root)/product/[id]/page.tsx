@@ -153,59 +153,60 @@ export default function ProductPage() {
 
   // Message seller function
   const handleMessageSeller = async () => {
-    if (!user || !listing || isOwner) {
-      if (!user) {
-        toast.error("Please sign in to message the seller");
-        router.push("/sign-in");
-        return;
-      }
-      if (isOwner) {
-        toast.error("You cannot message yourself");
-        return;
-      }
+  if (!user || !listing || isOwner) {
+    if (!user) {
+      toast.error("Please sign in to message the seller");
+      router.push("/sign-in");
       return;
     }
-
-    setIsMessaging(true);
-
-    try {
-      // Create or find existing conversation
-      const response = await fetch("/api/conversations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          listingId: listing._id,
-          sellerId: listing.sellerId,
-          buyerId: user.id,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create conversation");
-      }
-
-      if (result.success) {
-        const conversationId = result.data._id;
-        toast.success("Chat started successfully!");
-
-        // Redirect to the conversation
-        router.push(`/chat/${conversationId}`);
-      } else {
-        throw new Error(result.error || "Failed to create conversation");
-      }
-    } catch (err) {
-      console.error("Error creating conversation:", err);
-      toast.error(
-        err instanceof Error ? err.message : "Failed to start conversation"
-      );
-    } finally {
-      setIsMessaging(false);
+    if (isOwner) {
+      toast.error("You cannot message yourself");
+      return;
     }
-  };
+    return;
+  }
+
+  setIsMessaging(true);
+
+  try {
+    // Create or find existing conversation
+    const response = await fetch("/api/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        listingId: listing._id,
+        sellerId: listing.sellerId,
+        buyerId: user.id,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to create conversation");
+    }
+
+    if (result.success && result.data) {
+      const conversationId = result.data._id;
+      console.log("Conversation ID:", conversationId); // Debug log
+      toast.success("Chat started successfully!");
+
+      // Redirect to the conversation
+      router.push(`/chat/${conversationId}`);
+    } else {
+      throw new Error(result.error || "Failed to create conversation");
+    }
+  } catch (err) {
+    console.error("Error creating conversation:", err);
+    toast.error(
+      err instanceof Error ? err.message : "Failed to start conversation"
+    );
+  } finally {
+    setIsMessaging(false);
+  }
+};
 
   const nextImage = () => {
     if (listing && listing.images.length > 0) {

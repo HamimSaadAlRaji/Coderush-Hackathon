@@ -85,9 +85,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { sellerId, listingId } = await request.json();
+    const { sellerId, listingId, buyerId } = await request.json();
 
-    console.log("Creating conversation:", { userId, sellerId, listingId });
+    console.log("Creating conversation:", { userId, sellerId, listingId, buyerId });
+
+    // Use buyerId if provided, otherwise use userId
+    const actualBuyerId = buyerId || userId;
 
     // Validate input
     if (!sellerId) {
@@ -104,13 +107,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure sellerId and userId are strings
-    const userIdStr = String(userId);
+    // Ensure sellerId and buyerId are strings
+    const buyerIdStr = String(actualBuyerId);
     const sellerIdStr = String(sellerId);
 
     // Check if conversation already exists
     const existingConversation = await ConversationModel.findOne({
-      participants: { $all: [userIdStr, sellerIdStr] },
+      participants: { $all: [buyerIdStr, sellerIdStr] },
       listingId: listingId,
     }).populate("listingId", "title images");
 
@@ -118,13 +121,19 @@ export async function POST(request: NextRequest) {
       console.log("Found existing conversation:", existingConversation._id);
       return NextResponse.json({
         success: true,
-        data: existingConversation,
+        data: {
+          _id: existingConversation._id,
+          participants: existingConversation.participants,
+          listingId: existingConversation.listingId,
+          lastMessage: existingConversation.lastMessage,
+          lastMessageAt: existingConversation.lastMessageAt,
+        },
       });
     }
 
     // Create new conversation with string participants
     const conversation = new ConversationModel({
-      participants: [userIdStr, sellerIdStr],
+      participants: [buyerIdStr, sellerIdStr],
       listingId: listingId,
       lastMessage: "",
       lastMessageAt: new Date(),
@@ -139,7 +148,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: conversation,
+      data: {
+        _id: conversation._id,
+        participants: conversation.participants,
+        listingId: conversation.listingId,
+        lastMessage: conversation.lastMessage,
+        lastMessageAt: conversation.lastMessageAt,
+      },
     });
   } catch (error) {
     console.error("Error creating conversation:", error);
