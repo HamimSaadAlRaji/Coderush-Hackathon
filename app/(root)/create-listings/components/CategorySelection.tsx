@@ -87,7 +87,7 @@ export default function CategorySelection({
           )}
         </motion.div>
 
-        {formData.category === "item" && (
+        {formData.category && (
           <motion.div
             variants={itemVariants}
             initial="hidden"
@@ -96,11 +96,18 @@ export default function CategorySelection({
           >
             <h3 className="text-lg font-medium text-gray-900 flex items-center">
               <FaCamera className="mr-2 text-blue-600" />
-              Add Images <span className="text-red-500">*</span>
+              Add Images
+              {formData.category === "item" && (
+                <span className="text-red-500 ml-1">*</span>
+              )}
+              {formData.category === "service" && (
+                <span className="text-gray-500 ml-1">(Optional)</span>
+              )}
             </h3>
             <p className="text-gray-600 text-sm">
-              Images are required for physical items. You can add up to 5
-              images.
+              {formData.category === "item"
+                ? "Images are required for physical items. You can add up to 5 images."
+                : "Add images to showcase your service (optional). You can add up to 5 images."}
             </p>
 
             <ImageUploadComponent

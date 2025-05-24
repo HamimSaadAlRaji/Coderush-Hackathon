@@ -168,7 +168,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             }`}
           >
             <Link
-              href="/chats"
+              href="/chat"
               className={`flex items-center text-sky-800 hover:text-sky-600 hover:bg-white rounded-lg ${
                 !isOpen ? "p-1.5 justify-center" : "p-2"
               } transition-all duration-300 relative group`}
