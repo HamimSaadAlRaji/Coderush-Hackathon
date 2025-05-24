@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Skeleton } from "@heroui/react";
 import {
   TbMapPin,
   TbMessage,
@@ -159,8 +160,239 @@ export default function ProductPage() {
   }, [productId, user?.id, isLoaded]);
   if (!isLoaded || loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Back Button Skeleton */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="mb-6"
+        >
+          <Skeleton className="h-6 w-32 rounded-lg" />
+        </motion.div>
+
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ staggerChildren: 0.1 }}
+        >
+          {/* Image Gallery Skeleton */}
+          <motion.div 
+            className="space-y-4"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {/* Main Image Skeleton */}
+            <div className="relative bg-gray-100 rounded-xl overflow-hidden aspect-square">
+              <Skeleton className="w-full h-full rounded-xl" />
+              
+              {/* Navigation Buttons Skeleton */}
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                <Skeleton className="w-10 h-10 rounded-full" />
+              </div>
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <Skeleton className="w-10 h-10 rounded-full" />
+              </div>
+
+              {/* Dot Indicators Skeleton */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                {[...Array(3)].map((_, index) => (
+                  <Skeleton key={index} className="w-2 h-2 rounded-full" />
+                ))}
+              </div>
+            </div>
+
+            {/* Thumbnail Strip Skeleton */}
+            <div className="flex space-x-2 overflow-x-auto">
+              {[...Array(4)].map((_, index) => (
+                <Skeleton key={index} className="flex-shrink-0 w-20 h-20 rounded-lg" />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Product Details Skeleton */}
+          <motion.div 
+            className="space-y-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {/* Header Skeleton */}
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <Skeleton className="h-8 w-4/5 rounded-lg mb-2" />
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-32 rounded-lg" />
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <Skeleton className="w-10 h-10 rounded-full" />
+              </div>
+            </div>
+
+            {/* Price & Bidding Skeleton */}
+            <motion.div 
+              className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6"
+              animate={{ 
+                background: [
+                  "linear-gradient(to right, rgb(239 246 255), rgb(219 234 254))",
+                  "linear-gradient(to right, rgb(219 234 254), rgb(239 246 255))",
+                  "linear-gradient(to right, rgb(239 246 255), rgb(219 234 254))"
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <Skeleton className="h-4 w-20 rounded-lg mb-2" />
+                  <div className="flex items-center">
+                    <Skeleton className="h-8 w-8 rounded mr-2" />
+                    <Skeleton className="h-8 w-24 rounded-lg" />
+                  </div>
+                </div>
+                <Skeleton className="w-8 h-8 rounded" />
+              </div>
+              
+              {/* Bidding Input Skeleton */}
+              <div className="space-y-3">
+                <div className="flex space-x-2">
+                  <Skeleton className="flex-1 h-10 rounded-lg" />
+                  <Skeleton className="w-16 h-10 rounded-lg" />
+                </div>
+                <Skeleton className="h-3 w-32 rounded-lg" />
+              </div>
+            </motion.div>
+
+            {/* Seller Info Skeleton */}
+            <motion.div 
+              className="bg-white border border-gray-200 rounded-xl p-4"
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="flex items-center mb-3">
+                <Skeleton className="w-4 h-4 rounded mr-2" />
+                <Skeleton className="h-5 w-32 rounded-lg" />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Skeleton className="w-10 h-10 rounded-full mr-3" />
+                  <div>
+                    <Skeleton className="h-4 w-24 rounded-lg mb-1" />
+                    <div className="flex items-center">
+                      <Skeleton className="w-3 h-3 rounded mr-1" />
+                      <Skeleton className="h-3 w-32 rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Skeleton className="w-4 h-4 rounded mr-1" />
+                  <Skeleton className="h-4 w-8 rounded-lg" />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Action Button Skeleton */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Skeleton className="w-full h-12 rounded-lg" />
+            </motion.div>
+
+            {/* Product Details Skeleton */}
+            <motion.div 
+              className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
+              animate={{ borderColor: ["rgb(229 231 235)", "rgb(219 234 254)", "rgb(229 231 235)"] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <div className="flex items-center">
+                <Skeleton className="w-4 h-4 rounded mr-2" />
+                <Skeleton className="h-5 w-28 rounded-lg" />
+              </div>
+
+              {/* Grid Details Skeleton */}
+              <div className="grid grid-cols-2 gap-4">
+                {[...Array(4)].map((_, index) => (
+                  <motion.div 
+                    key={index}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                  >
+                    <Skeleton className="h-3 w-16 rounded-lg mb-1" />
+                    <Skeleton className="h-4 w-20 rounded-lg" />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Description Skeleton */}
+              <div>
+                <Skeleton className="h-3 w-20 rounded-lg mb-2" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-full rounded-lg" />
+                  <Skeleton className="h-3 w-4/5 rounded-lg" />
+                  <Skeleton className="h-3 w-3/5 rounded-lg" />
+                </div>
+              </div>
+
+              {/* Tags Skeleton */}
+              <div>
+                <Skeleton className="h-3 w-12 rounded-lg mb-2" />
+                <div className="flex flex-wrap gap-2">
+                  {[...Array(3)].map((_, index) => (
+                    <motion.div
+                      key={index}
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, delay: index * 0.2, repeat: Infinity }}
+                    >
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location Skeleton */}
+              <div>
+                <div className="flex items-center mb-2">
+                  <Skeleton className="w-3 h-3 rounded mr-1" />
+                  <Skeleton className="h-3 w-24 rounded-lg" />
+                </div>
+                <motion.div 
+                  className="bg-gray-100 rounded-lg p-3"
+                  animate={{ backgroundColor: ["rgb(243 244 246)", "rgb(249 250 251)", "rgb(243 244 246)"] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Skeleton className="h-3 w-40 rounded-lg mb-1" />
+                  <Skeleton className="h-3 w-20 rounded-lg" />
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Floating Loading Indicator */}
+        <motion.div
+          className="fixed bottom-8 right-8 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center"
+          animate={{ 
+            y: [0, -5, 0],
+            boxShadow: [
+              "0 10px 25px rgba(0,0,0,0.1)",
+              "0 15px 35px rgba(0,0,0,0.15)",
+              "0 10px 25px rgba(0,0,0,0.1)"
+            ]
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <motion.div
+            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
+          <span className="text-sm font-medium">Loading...</span>
+        </motion.div>
       </div>
     );
   }
