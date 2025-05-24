@@ -12,7 +12,6 @@ import {
   TbCheck,
   TbX,
   TbUser,
-  TbSchool,
   TbClock,
   TbTag,
   TbHeart,
@@ -45,7 +44,6 @@ interface Listing {
   condition?: "new" | "likeNew" | "good" | "fair" | "poor";
   images: string[];
   sellerId: string;
-  sellerName: string;
   sellerUniversity: string;
   visibility: "university" | "all";
   status: "active" | "sold" | "expired" | "removed";
@@ -59,67 +57,104 @@ interface Listing {
   editedFields?: string[];
 }
 
+interface SellerInfo {
+  name: string;
+  university?: string;
+  rating?: number;
+}
+
 export default function ProductPage() {
   const { user, isLoaded } = useUser();
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
-
   const [listing, setListing] = useState<Listing | null>(null);
+  const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bidAmount, setBidAmount] = useState("");
   const [editFormData, setEditFormData] = useState<Partial<Listing>>({});
   const [editedFields, setEditedFields] = useState<string[]>([]);
-
-  // Mock listing data - in real app, this would come from an API
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  // Fetch listing data from API
   useEffect(() => {
-    // Simulate API call
-    const mockListing: Listing = {
-      _id: productId,
-      title: "Python Programming Tutoring & Web Development Help",
-      description:
-        "Experienced computer science student offering comprehensive Python programming tutoring and web development assistance. I can help with:\n\n• Python fundamentals and advanced concepts\n• Data structures and algorithms\n• Web development with Django/Flask\n• Database integration\n• Project debugging and code review\n• Assignment help and exam preparation\n\nI have 3+ years of experience and have helped over 50 students improve their programming skills. Available for both one-on-one sessions and group tutoring.",
-      category: "service", // 👈 Changed to service
-      subCategory: "tutoring", // 👈 Service subcategory
-      price: 25.0, // Hourly rate
-      pricingType: "hourly", // 👈 Hourly pricing for services
-      images: [
-        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // Programming/coding image
-        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // Study/tutoring image
-        "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", // Learning environment
-      ],
-      sellerId: "different-seller-id", // Different from current user to see buyer view
-      sellerName: "Sarah Chen",
-      sellerUniversity: "Stanford University",
-      visibility: "university",
-      status: "active",
-      createdAt: new Date("2023-11-10"),
-      updatedAt: new Date("2023-11-17"),
-      tags: [
-        "python",
-        "programming",
-        "tutoring",
-        "web-development",
-        "django",
-        "algorithms",
-      ],
-      locations: [
-        {
-          type: "Point",
-          coordinates: [-122.1697, 37.4419], // Stanford campus coordinates
-        },
-      ],
-      editedFields: [],
+    const fetchListing = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch listing details
+        const listingResponse = await fetch(`/api/listings/${productId}`);
+        const listingResult = await listingResponse.json();
+
+        if (!listingResponse.ok) {
+          throw new Error(listingResult.error || 'Failed to fetch listing');
+        }
+
+        if (listingResult.success) {
+          const listingData = listingResult.data;
+          
+          // Set listing data
+          setListing({
+            ...listingData,
+            createdAt: new Date(listingData.createdAt),
+            updatedAt: new Date(listingData.updatedAt),
+            editedFields: []
+          });
+          
+          // Check if current user is the owner
+          setIsOwner(user?.id === listingData.sellerId);
+          
+          // Set initial edit form data
+          setEditFormData(listingData);
+
+          // Fetch seller information
+          try {
+            const sellerResponse = await fetch(`/api/users?clerkId=${listingData.sellerId}`);
+            const sellerResult = await sellerResponse.json();
+            
+            if (sellerResponse.ok && sellerResult.success) {
+              const seller = sellerResult.data;
+              setSellerInfo({
+                name: `${seller.firstName} ${seller.lastName}`,
+                university: seller.university,
+                rating: seller.rating || 4.8
+              });
+            } else {
+              // Fallback seller info
+              setSellerInfo({
+                name: 'User',
+                university: listingData.sellerUniversity || 'Unknown University',
+                rating: 4.8
+              });
+            }
+          } catch (sellerError) {
+            console.error('Error fetching seller info:', sellerError);
+            // Set fallback seller info
+            setSellerInfo({
+              name: 'User',
+              university: listingData.sellerUniversity || 'Unknown University',
+              rating: 4.8
+            });
+          }
+        } else {
+          throw new Error(listingResult.error || 'Failed to fetch listing');
+        }
+      } catch (err) {
+        console.error('Error fetching listing:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load listing');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setListing(mockListing);
-    setIsOwner(user?.id === mockListing.sellerId);
-    setEditFormData(mockListing);
-  }, [productId, user?.id]);
-
-  if (!isLoaded || !listing) {
+    if (productId && isLoaded) {
+      fetchListing();
+    }
+  }, [productId, user?.id, isLoaded]);
+  if (!isLoaded || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -127,7 +162,40 @@ export default function ProductPage() {
     );
   }
 
-  const handleEdit = (field: string, value: any) => {
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!listing) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Listing Not Found</h1>
+          <p className="text-gray-600 mb-4">The listing you're looking for doesn't exist.</p>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+  const handleEdit = (field: string, value: string | number) => {
     setEditFormData((prev) => ({ ...prev, [field]: value }));
     if (!editedFields.includes(field)) {
       setEditedFields((prev) => [...prev, field]);
@@ -147,15 +215,13 @@ export default function ProductPage() {
     setEditedFields([]);
     setIsEditing(false);
   };
-
   const placeBid = () => {
     if (
       !bidAmount ||
-      parseFloat(bidAmount) <= (listing.currentBid || listing.price)
+      parseFloat(bidAmount) <= (listing?.currentBid || listing?.price || 0)
     ) {
       toast.error("Bid must be higher than current bid", {
-        style: { background: "#fee2e2", color: "#b91c1c" }, // red bg, red text
-        iconTheme: { primary: "#b91c1c", secondary: "#fee2e2" },
+        style: { background: "#fee2e2", color: "#b91c1c" }
       });
       return;
     }
@@ -181,8 +247,7 @@ export default function ProductPage() {
     toast.success(
       `Bid placed successfully! Your bid: $${parseFloat(bidAmount).toFixed(2)}`,
       {
-        style: { background: "#dcfce7", color: "#166534" }, // green bg, green text
-        iconTheme: { primary: "#22c55e", secondary: "#dcfce7" },
+        style: { background: "#dcfce7", color: "#166534" }
       }
     );
 
@@ -193,14 +258,13 @@ export default function ProductPage() {
     // In real app, initiate chat with seller
     alert("Chat feature would be implemented here");
   };
-
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % listing.images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % (listing?.images.length || 1));
   };
 
   const previousImage = () => {
     setCurrentImageIndex(
-      (prev) => (prev - 1 + listing.images.length) % listing.images.length
+      (prev) => (prev - 1 + (listing?.images.length || 1)) % (listing?.images.length || 1)
     );
   };
 
@@ -462,9 +526,7 @@ export default function ProductPage() {
                 <TbTag className="text-blue-600 text-3xl" />
               </div>
             )}
-          </div>
-
-          {/* Seller Info */}
+          </div>          {/* Seller Info */}
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <h3 className="font-medium text-gray-900 mb-3 flex items-center">
               <TbUser className="mr-2 text-blue-600" />
@@ -477,16 +539,16 @@ export default function ProductPage() {
                     <TbUser className="text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium">{listing.sellerName}</p>
+                    <p className="font-medium">{sellerInfo?.name || 'Unknown User'}</p>
                     <div className="flex items-center text-sm text-gray-600">
                       <FaUniversity className="mr-1" />
-                      {listing.sellerUniversity}
+                      {sellerInfo?.university || listing.sellerUniversity || 'Unknown University'}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center text-yellow-500">
                   <TbStar className="mr-1" />
-                  <span className="text-sm font-medium">4.8</span>
+                  <span className="text-sm font-medium">{sellerInfo?.rating?.toFixed(1) || '4.8'}</span>
                 </div>
               </div>
             </div>
