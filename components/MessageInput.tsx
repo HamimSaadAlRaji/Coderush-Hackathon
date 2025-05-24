@@ -1,56 +1,59 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import { TbSend, TbPhoto, TbX, TbLoader2 } from 'react-icons/tb';
+import React, { useState, useRef } from "react";
+import { TbSend, TbPhoto, TbX, TbLoader2 } from "react-icons/tb";
 
 interface MessageInputProps {
   onSendMessage: (content: string, images?: string[]) => void;
 }
 
 export default function MessageInput({ onSendMessage }: MessageInputProps) {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadAndSendImages = async (files: File[]) => {
     if (files.length === 0) return;
 
     setUploading(true);
-    
+
     try {
       const formData = new FormData();
       files.forEach((file) => {
-        formData.append('images', file);
+        formData.append("images", file);
       });
 
-      const uploadResponse = await fetch('/api/chat/upload-image', {
-        method: 'POST',
+      const uploadResponse = await fetch("/api/chat/upload-image", {
+        method: "POST",
         body: formData,
       });
 
       const uploadData = await uploadResponse.json();
 
       if (!uploadResponse.ok) {
-        throw new Error(uploadData.error || 'Failed to upload images');
+        throw new Error(uploadData.error || "Failed to upload images");
       }
 
       if (uploadData.success && uploadData.urls) {
-        // Send images immediately without text
-        await onSendMessage('', uploadData.urls);
-        
+        // Send images immediately without text - now using Cloudinary URLs
+        await onSendMessage("", uploadData.urls);
+
         // Clear selected images after successful upload and send
         setSelectedImages([]);
         if (fileInputRef.current) {
-          fileInputRef.current.value = '';
+          fileInputRef.current.value = "";
         }
       } else {
-        throw new Error('Invalid response format from upload');
+        throw new Error("Invalid response format from upload");
       }
     } catch (error) {
-      console.error('Error uploading and sending images:', error);
-      alert(`Failed to send images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error uploading and sending images:", error);
+      alert(
+        `Failed to send images: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setUploading(false);
     }
@@ -58,15 +61,19 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // If there's only text (no images), send the text message
     if (message.trim() && selectedImages.length === 0) {
       try {
         await onSendMessage(message.trim());
-        setMessage('');
+        setMessage("");
       } catch (error) {
-        console.error('Error sending text message:', error);
-        alert(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error("Error sending text message:", error);
+        alert(
+          `Failed to send message: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
       return;
     }
@@ -74,39 +81,43 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
     // If there are both text and images, upload images and send together
     if (message.trim() && selectedImages.length > 0) {
       setUploading(true);
-      
+
       try {
         const formData = new FormData();
         selectedImages.forEach((file) => {
-          formData.append('images', file);
+          formData.append("images", file);
         });
 
-        const uploadResponse = await fetch('/api/chat/upload-image', {
-          method: 'POST',
+        const uploadResponse = await fetch("/api/chat/upload-image", {
+          method: "POST",
           body: formData,
         });
 
         const uploadData = await uploadResponse.json();
 
         if (!uploadResponse.ok) {
-          throw new Error(uploadData.error || 'Failed to upload images');
+          throw new Error(uploadData.error || "Failed to upload images");
         }
 
         if (uploadData.success && uploadData.urls) {
           await onSendMessage(message.trim(), uploadData.urls);
-          
+
           // Reset form
-          setMessage('');
+          setMessage("");
           setSelectedImages([]);
           if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+            fileInputRef.current.value = "";
           }
         } else {
-          throw new Error('Invalid response format from upload');
+          throw new Error("Invalid response format from upload");
         }
       } catch (error) {
-        console.error('Error sending message with images:', error);
-        alert(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error("Error sending message with images:", error);
+        alert(
+          `Failed to send message: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       } finally {
         setUploading(false);
       }
@@ -115,41 +126,49 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
+
     // Validate file types
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
-    
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    const invalidFiles = files.filter(
+      (file) => !allowedTypes.includes(file.type)
+    );
+
     if (invalidFiles.length > 0) {
-      alert('Please select only JPEG, PNG, GIF, or WebP images.');
+      alert("Please select only JPEG, PNG, GIF, or WebP images.");
       return;
     }
 
     // Validate file sizes (5MB each)
     const maxSize = 5 * 1024 * 1024;
-    const oversizedFiles = files.filter(file => file.size > maxSize);
-    
+    const oversizedFiles = files.filter((file) => file.size > maxSize);
+
     if (oversizedFiles.length > 0) {
-      alert('Please select images smaller than 5MB each.');
+      alert("Please select images smaller than 5MB each.");
       return;
     }
 
     // Limit total number of images
     const totalImages = selectedImages.length + files.length;
     if (totalImages > 5) {
-      alert('You can only send up to 5 images at once.');
+      alert("You can only send up to 5 images at once.");
       return;
     }
 
     // Add to selected images for preview
-    setSelectedImages(prev => [...prev, ...files]);
+    setSelectedImages((prev) => [...prev, ...files]);
 
-    // Immediately upload and send the images
+    // Immediately upload and send the images to Cloudinary
     await uploadAndSendImages(files);
   };
 
   const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Send images immediately when they are in selectedImages (for manual send)
@@ -165,14 +184,16 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
       {selectedImages.length > 0 && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Selected images:</span>
+            <span className="text-sm text-gray-600">
+              Selected images (will upload to Cloudinary):
+            </span>
             <button
               type="button"
               onClick={handleSendImagesOnly}
               disabled={uploading}
               className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {uploading ? 'Sending...' : 'Send Images'}
+              {uploading ? "Uploading to Cloudinary..." : "Send Images"}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -206,7 +227,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
             rows={1}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSubmit(e);
               }
@@ -221,7 +242,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Add images (will send immediately)"
+          title="Add images (will upload to Cloudinary immediately)"
         >
           <TbPhoto className="w-6 h-6" />
         </button>
@@ -254,7 +275,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
       {uploading && (
         <div className="mt-2 text-sm text-blue-600 flex items-center">
           <TbLoader2 className="w-4 h-4 animate-spin mr-2" />
-          Uploading and sending images...
+          Uploading to Cloudinary and sending...
         </div>
       )}
     </div>
