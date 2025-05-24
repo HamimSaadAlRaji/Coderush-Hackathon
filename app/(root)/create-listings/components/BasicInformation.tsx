@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { TbEdit, TbArrowLeft } from "react-icons/tb";
+import AiTwinkleButton from "./AiTwinkleButton";
 
 interface BasicInformationProps {
   formData: any;
@@ -59,10 +60,21 @@ export default function BasicInformation({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-6 flex items-center">
-        <TbEdit className="mr-2 text-blue-600" /> Basic Information
+      <h2 className="text-2xl font-bold mb-6 flex items-center justify-between">
+        <div className="flex items-center">
+          <TbEdit className="mr-2 text-blue-600" /> Basic Information
+        </div>
+        {formData.category === "item" && (
+        <div className="ml-auto">
+          <div
+            className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 cursor-pointer transition-colors group"
+            title="Generate your Product name, Description and product condition from your image"
+          >
+            <AiTwinkleButton />
+          </div>
+        </div>
+        )}
       </h2>
-
       <div className="space-y-6">
         <motion.div variants={itemVariants}>
           <label
