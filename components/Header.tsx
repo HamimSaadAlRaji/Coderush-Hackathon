@@ -46,7 +46,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const handleGetStarted = () => {
     if (!isSignedIn) {
-      router.push("/sign-in");
+      router.push("/post-sign-in");
     }
   };
 
@@ -58,15 +58,12 @@ export function Header() {
           <NavbarLogo />
           <NavItems items={navItems} />
           <div className="flex items-center gap-4">
-            <NavbarButton variant="secondary" onClick={() => router.push("/sign-in")}>
-              Login
-            </NavbarButton>
             <SignedOut>
-              <NavbarButton variant="primary" onClick={handleGetStarted}>
-              
-                Get Started
-              
-              </NavbarButton>
+              <SignInButton mode="redirect" forceRedirectUrl="/post-sign-in">
+                <NavbarButton variant="primary">
+                  Get Started
+                </NavbarButton>
+              </SignInButton>
             </SignedOut>
             <SignedIn>
               <UserButton />
@@ -90,31 +87,16 @@ export function Header() {
           >
             {/* ...existing mobile menu items... */}
             <div className="flex w-full flex-col gap-4">
-              <NavbarButton
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  router.push("/sign-in");
-                }}
-                variant="primary"
-                className="w-full"
-              >
-                Login
-              </NavbarButton>
               <SignedOut>
-                <NavbarButton
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    router.push("/sign-in");
-                  }}
-                  variant="primary"
-                  className="w-full"
-                >
-                  Get Started
-                </NavbarButton>
+                <SignInButton mode="redirect" forceRedirectUrl="/post-sign-in">
+                  <NavbarButton variant="primary" className="w-full">
+                    Get Started
+                  </NavbarButton>
+                </SignInButton>
               </SignedOut>
               <SignedIn>
-              <UserButton />
-            </SignedIn>
+                <UserButton />
+              </SignedIn>
             </div>
           </MobileNavMenu>
         </MobileNav>
