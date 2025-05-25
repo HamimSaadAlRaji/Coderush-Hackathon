@@ -27,21 +27,21 @@ export function Header() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
 
-  const navItems = [
-    {
-      name: "Features",
-      link: "#features",
-    },
-    {
-      name: "Pricing",
-      link: "#pricing",
-    },
-    {
-      name: "Contact",
-      link: "#contact",
-    },
+  // const navItems = [
+  //   {
+  //     name: "Features",
+  //     link: "#features",
+  //   },
+  //   {
+  //     name: "Pricing",
+  //     link: "#pricing",
+  //   },
+  //   {
+  //     name: "Contact",
+  //     link: "#contact",
+  //   },
 
-  ];
+  // ];
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const handleGetStarted = () => {
@@ -56,7 +56,7 @@ export function Header() {
         {/* Desktop Navigation */}
         <NavBody>
           <NavbarLogo />
-          <NavItems items={navItems} />
+          {/* <NavItems items={navItems} /> */}
           <div className="flex items-center gap-4">
             <SignedOut>
               <SignInButton mode="redirect" forceRedirectUrl="/post-sign-in">

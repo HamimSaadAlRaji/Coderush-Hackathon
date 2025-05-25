@@ -56,12 +56,13 @@ export default function Hero() {
               selling, and skill exchange within trusted campus communities
             </p>
             <div className="flex flex-wrap gap-4 transition-all duration-1000 delay-500 ease-in-out">
-              <button className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30 transform hover:scale-105 transition-all duration-300">
+                <button
+                className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30 transform hover:scale-105 transition-all duration-300"
+                onClick={() => window.location.href = "/dashboard"}
+                >
                 Get Started
-              </button>
-              <button className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium transform hover:scale-105 transition-all duration-300">
-                View Components
-              </button>
+                </button>
+               
             </div>
             <div className="mt-8 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 transition-all duration-1000 delay-700 ease-in-out">
               <div className="flex -space-x-2">
