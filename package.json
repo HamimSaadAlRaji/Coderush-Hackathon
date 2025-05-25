@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.2.18",
     "@clerk/nextjs": "^6.20.0",
     "@google-cloud/vision": "^5.1.0",
     "@google/generative-ai": "^0.24.1",
@@ -19,6 +20,8 @@
     "@lottiefiles/dotlottie-react": "^0.13.5",
     "@supabase/supabase-js": "^2.49.4",
     "@tabler/icons-react": "^3.33.0",
+    "@vapi-ai/web": "^2.3.1",
+    "ai": "^4.3.16",
     "cloudinary": "^2.6.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
