@@ -76,7 +76,7 @@ export default function BasicInformation({
     setIsAnalyzing(true);
     try {
       const response = await fetch(
-        "http://localhost:3000/api/analyze-product",
+        "/api/analyze-product",
         {
           method: "POST",
           headers: {
