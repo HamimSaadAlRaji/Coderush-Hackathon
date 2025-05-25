@@ -56,13 +56,12 @@ export default function Hero() {
               selling, and skill exchange within trusted campus communities
             </p>
             <div className="flex flex-wrap gap-4 transition-all duration-1000 delay-500 ease-in-out">
-                <button
+              <button
                 className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30 transform hover:scale-105 transition-all duration-300"
-                onClick={() => window.location.href = "/dashboard"}
-                >
+                onClick={() => (window.location.href = "/dashboard")}
+              >
                 Get Started
-                </button>
-               
+              </button>
             </div>
             <div className="mt-8 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 transition-all duration-1000 delay-700 ease-in-out">
               <div className="flex -space-x-2">
@@ -110,7 +109,7 @@ export default function Hero() {
               <div className="absolute inset-0 bg-gradient-to-tr from-gray-200 to-white dark:from-gray-800 dark:to-gray-700"></div>
               <div className="relative h-full w-full transform transition-transform duration-500 hover:scale-105">
                 <Image
-                  src=""
+                  src="https://plus.unsplash.com/premium_photo-1714347051060-f3a5bd84f7ea?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&fbclid=IwY2xjawKfUnVleHRuA2FlbQIxMQABHrLHw82-4vJxrX-HdRrqDiuBVY-m2AlWqjGmA7fKKyHcKQNWXw4L5sQZcc66_aem_4P5c6OXPUdC3c5i6NeRL-A"
                   alt="Dashboard Preview"
                   fill
                   className="object-cover"
