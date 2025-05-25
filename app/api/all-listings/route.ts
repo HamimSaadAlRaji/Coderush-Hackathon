@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import connectDB from '@/lib/dbconnect';
 import Listing from '@/models/Listing';
+import User from '@/models/User';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Check authentication to determine if user is admin
+    const { userId } = await auth();
+    let isAdmin = false;
+    
+    if (userId) {
+      await connectDB();
+      const user = await User.findOne({ clerkId: userId });
+      isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+    }
     
     // Query parameters for filtering and pagination
     const page = parseInt(searchParams.get('page') || '1');
@@ -22,11 +34,10 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice');
 
     // Connect to database
-    await connectDB();
-
-    // Build query filter
+    await connectDB();    // Build query filter
     interface QueryFilter {
       status?: string;
+      approvalStatus?: string;
       category?: string;
       subCategory?: string;
       sellerUniversity?: string;
@@ -41,6 +52,11 @@ export async function GET(request: NextRequest) {
     }
 
     const query: QueryFilter = {};
+
+    // Only show approved listings for non-admin users
+    if (!isAdmin) {
+      query.approvalStatus = 'approved';
+    }
 
     // Status filter (default to active)
     if (status) {

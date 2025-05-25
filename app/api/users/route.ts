@@ -109,11 +109,9 @@ export async function GET(request: NextRequest) {
         success: false,
         error: 'User not found'
       }, { status: 404 });
-    }
-
-    return NextResponse.json({
+    }    return NextResponse.json({
       success: true,
-      data: {
+      user: {
         id: user._id,
         clerkId: user.clerkId,
         email: user.email,

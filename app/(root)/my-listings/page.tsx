@@ -16,7 +16,6 @@ import {
   TbCalendar,
   TbTag,
   TbCurrencyDollar,
-  TbEye,
   TbPhoto,
   TbClockHour4,
   TbCheck,
@@ -111,7 +110,6 @@ export default function MyListingsPage() {
         return <TbAlertTriangle className="text-gray-600" />;
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -122,6 +120,32 @@ export default function MyListingsPage() {
         return "bg-yellow-50 text-yellow-700 border-yellow-200";
       case "removed":
         return "bg-gray-50 text-gray-700 border-gray-200";
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
+
+  const getApprovalStatusIcon = (approvalStatus: string) => {
+    switch (approvalStatus) {
+      case "approved":
+        return <TbCheck className="text-green-600" />;
+      case "rejected":
+        return <TbX className="text-red-600" />;
+      case "pending":
+        return <TbClockHour4 className="text-yellow-600" />;
+      default:
+        return <TbAlertTriangle className="text-gray-600" />;
+    }
+  };
+
+  const getApprovalStatusColor = (approvalStatus: string) => {
+    switch (approvalStatus) {
+      case "approved":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "rejected":
+        return "bg-red-50 text-red-700 border-red-200";
+      case "pending":
+        return "bg-yellow-50 text-yellow-700 border-yellow-200";
       default:
         return "bg-gray-50 text-gray-700 border-gray-200";
     }
@@ -338,13 +362,12 @@ export default function MyListingsPage() {
         </motion.div>
       ) : (
         <div className="space-y-4">
-          {/* Table Header */}
-          <motion.div
+          {/* Table Header */}          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 bg-gray-50 rounded-lg font-medium text-gray-700 text-sm border"
           >
-            <div className="col-span-4 flex items-center">
+            <div className="col-span-3 flex items-center">
               <TbPhoto className="mr-2" />
               Product
             </div>
@@ -361,6 +384,10 @@ export default function MyListingsPage() {
               Status
             </div>
             <div className="col-span-2 flex items-center">
+              <TbClockHour4 className="mr-2" />
+              Approval
+            </div>
+            <div className="col-span-1 flex items-center">
               <TbCalendar className="mr-2" />
               Created
             </div>
@@ -407,9 +434,8 @@ export default function MyListingsPage() {
                       <p className="text-gray-600 text-sm mb-2 line-clamp-1">
                         {listing.description}
                       </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-gray-900">
-                          ${listing.price.toFixed(2)}
+                      <div className="flex items-center justify-between">                        <span className="text-lg font-bold text-gray-900">
+                          ৳{listing.price.toFixed(2)}
                         </span>
                         <div
                           className={`flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
@@ -423,9 +449,7 @@ export default function MyListingsPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  </div>                  <div className="flex items-center justify-between text-sm text-gray-500">
                     <span className="flex items-center">
                       <TbTag className="mr-1" />
                       {listing.category}
@@ -434,7 +458,28 @@ export default function MyListingsPage() {
                       <TbCalendar className="mr-1" />
                       {new Date(listing.createdAt).toLocaleDateString()}
                     </span>
+                  </div>                  {/* Approval Status for Mobile */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Approval Status:</span>
+                    <div
+                      className={`flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getApprovalStatusColor(
+                        listing.approvalStatus || 'pending'
+                      )}`}
+                    >
+                      {getApprovalStatusIcon(listing.approvalStatus || 'pending')}
+                      <span className="ml-2 capitalize">
+                        {listing.approvalStatus || 'pending'}
+                      </span>
+                    </div>
                   </div>
+
+                  {listing.rejectionReason && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">
+                        <strong>Rejection Reason:</strong> {listing.rejectionReason}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="flex space-x-2 pt-2 border-t">
                     <motion.button
@@ -461,12 +506,10 @@ export default function MyListingsPage() {
                       <TbTrash />
                     </motion.button>
                   </div>
-                </div>
-
-                {/* Desktop Layout */}
+                </div>                {/* Desktop Layout */}
                 <div className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 items-center">
                   {/* Product Info */}
-                  <div className="col-span-4 flex items-center space-x-4">
+                  <div className="col-span-3 flex items-center space-x-4">
                     <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       {listing.images.length > 0 ? (
                         <Image
@@ -517,12 +560,29 @@ export default function MyListingsPage() {
                       {getStatusIcon(listing.status)}
                       <span className="ml-2 capitalize">{listing.status}</span>
                     </div>
+                  </div>                  {/* Approval Status */}
+                  <div className="col-span-2">
+                    <div
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getApprovalStatusColor(
+                        listing.approvalStatus || 'pending'
+                      )}`}
+                    >
+                      {getApprovalStatusIcon(listing.approvalStatus || 'pending')}
+                      <span className="ml-2 capitalize">
+                        {listing.approvalStatus || 'pending'}
+                      </span>
+                    </div>
+                    {listing.rejectionReason && (
+                      <p className="text-xs text-red-600 mt-1 truncate" title={listing.rejectionReason}>
+                        {listing.rejectionReason}
+                      </p>
+                    )}
                   </div>
 
                   {/* Created Date */}
-                  <div className="col-span-2 text-sm text-gray-500">
+                  <div className="col-span-1 text-sm text-gray-500">
                     <div className="flex items-center">
-                      <TbCalendar className="mr-2" />
+                      <TbCalendar className="mr-1" />
                       {new Date(listing.createdAt).toLocaleDateString()}
                     </div>
                   </div>

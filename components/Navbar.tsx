@@ -1,11 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { TbShoppingBag } from "react-icons/tb";
+import { TbShoppingBag, TbSettings } from "react-icons/tb";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
+  const { userId } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (userId) {
+        try {
+          const response = await fetch('/api/users');
+          const data = await response.json();
+          if (data.success && data.user && (data.user.role === 'admin' || data.user.role === 'superadmin')) {
+            setIsAdmin(true);
+          }
+        } catch (error) {
+          console.error('Error checking admin status:', error);
+        }
+      }
+    };
+
+    checkAdminStatus();
+  }, [userId]);
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -33,7 +55,18 @@ export default function Navbar() {
                 Student Marketplace
               </span>
             </div>
-          </Link>
+          </Link>          {/* Navigation Links */}
+          <div className="flex items-center space-x-6">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <TbSettings className="text-lg" />
+                <span className="font-medium">Admin Panel</span>
+              </Link>
+            )}
+          </div>
 
           {/* User Button */}
           <div className="flex items-center">

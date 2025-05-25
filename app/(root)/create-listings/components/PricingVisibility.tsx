@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion";
-import { TbArrowLeft } from "react-icons/tb";
+import { TbArrowLeft, TbCurrencyTaka } from "react-icons/tb";
 import { FaCoins, FaTag, FaUniversity, FaEye, FaInfoCircle } from "react-icons/fa";
 import AiTwinkleButton from "./AiTwinkleButton";
 import { useState } from "react";
@@ -181,9 +181,8 @@ export default function PricingVisibility({
               ? "Starting Price (for bids)"
               : "Hourly Rate"}
             <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-3 text-gray-500">$</span>
+          </label>          <div className="relative">
+            <TbCurrencyTaka className="absolute left-3 top-3 text-gray-500" />
             <input
               type="number"
               id="price"
@@ -218,17 +217,16 @@ export default function PricingVisibility({
                   <h4 className="font-medium text-blue-900 mb-2">
                     AI Price Suggestion
                   </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
+                  <div className="space-y-2 text-sm">                    <div className="flex justify-between items-center">
                       <span className="text-gray-700">Suggested Price Range:</span>
                       <span className="font-medium text-blue-800">
-                        {priceSuggestion.suggestedPrice.currency} {priceSuggestion.suggestedPrice.min.toLocaleString()} - {priceSuggestion.suggestedPrice.max.toLocaleString()}
+                        ৳{priceSuggestion.suggestedPrice.min.toLocaleString()} - ৳{priceSuggestion.suggestedPrice.max.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">Average Price:</span>
                       <span className="font-semibold text-blue-900">
-                        {priceSuggestion.suggestedPrice.currency} {priceSuggestion.suggestedPrice.average.toLocaleString()}
+                        ৳{priceSuggestion.suggestedPrice.average.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">

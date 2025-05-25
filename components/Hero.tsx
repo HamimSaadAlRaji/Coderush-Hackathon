@@ -58,7 +58,7 @@ export default function Hero() {
             <div className="flex flex-wrap gap-4 transition-all duration-1000 delay-500 ease-in-out">
                 <button
                 className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30 transform hover:scale-105 transition-all duration-300"
-                onClick={() => window.location.href = "/dashboard"}
+                onClick={() => window.location.href = "/all-listings"}
                 >
                 Get Started
                 </button>

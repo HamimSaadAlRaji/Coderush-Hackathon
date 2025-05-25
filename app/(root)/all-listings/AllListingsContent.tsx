@@ -13,7 +13,7 @@ import {
   TbChevronDown,
   TbMapPin,
   TbTag,
-  TbCurrencyDollar,
+  TbCurrencyTaka,
   TbCalendar,
   TbEye,
   TbHeart,
@@ -367,11 +367,9 @@ export default function AllListingsContent() {
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
           {listing.title}
-        </h3>
-
-        <div className="flex items-center justify-between mb-2">
+        </h3>        <div className="flex items-center justify-between mb-2">
           <span className="text-2xl font-bold text-blue-600">
-            ${listing.price.toFixed(2)}
+            ৳{listing.price.toFixed(2)}
           </span>
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -682,36 +680,33 @@ export default function AllListingsContent() {
                 </p>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          </div>          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <TbCurrencyDollar className="text-green-600 text-2xl mr-3" />
+              <TbCurrencyTaka className="text-green-600 text-2xl mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Average Price</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${stats.averagePrice.toFixed(2)}
+                  ৳{stats.averagePrice.toFixed(2)}
                 </p>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          </div>          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <TbCurrencyDollar className="text-red-600 text-2xl mr-3" />
+              <TbCurrencyTaka className="text-red-600 text-2xl mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Min Price</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${stats.minPrice.toFixed(2)}
+                  ৳{stats.minPrice.toFixed(2)}
                 </p>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          </div>          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <TbCurrencyDollar className="text-blue-600 text-2xl mr-3" />
+              <TbCurrencyTaka className="text-blue-600 text-2xl mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Max Price</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${stats.maxPrice.toFixed(2)}
+                  ৳{stats.maxPrice.toFixed(2)}
                 </p>
               </div>
             </div>

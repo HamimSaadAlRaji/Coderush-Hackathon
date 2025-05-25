@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { TbArrowLeft } from "react-icons/tb";
 import { ImageUploadResult } from "@/lib/hooks/useImageUpload";
 import { toast } from "sonner";
+import Notification from "@/components/Notification";
 
 // Import components
 import CategorySelection from "./components/CategorySelection";
@@ -39,6 +40,7 @@ export default function CreateListingPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showApprovalNotification, setShowApprovalNotification] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
     {}
   );
@@ -293,15 +295,19 @@ export default function CreateListingPage() {
 
       if (!result.success) {
         throw new Error(result.error || "Failed to create listing");
-      }
-
-      console.log("Listing created successfully:", result.data);
+      }      console.log("Listing created successfully:", result.data);
 
       toast.success("Listing created successfully!", {
         style: { background: "#22c55e", color: "#fff" },
       });
 
-      router.push("/my-listings");
+      // Show approval notification
+      setShowApprovalNotification(true);
+
+      // Redirect to my-listings after a delay
+      setTimeout(() => {
+        router.push("/my-listings");
+      }, 3000);
     } catch (error) {
       console.error("Error submitting listing:", error);
       toast.error(
@@ -438,10 +444,19 @@ export default function CreateListingPage() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <ProgressSteps currentStep={currentStep} />
+      >        <ProgressSteps currentStep={currentStep} />
         <form onSubmit={(e) => e.preventDefault()}>{renderStep()}</form>
       </motion.div>
+
+      {/* Approval Notification */}
+      <Notification
+        type="info"
+        title="Listing Submitted for Review"
+        message="Your listing has been created successfully and is now pending admin approval. It will be visible to other users once approved."
+        isVisible={showApprovalNotification}
+        onClose={() => setShowApprovalNotification(false)}
+        autoHide={false}
+      />
     </div>
   );
 }

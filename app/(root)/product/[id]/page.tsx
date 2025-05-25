@@ -406,9 +406,8 @@ export default function ProductPage() {
             )}
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold text-blue-600">
-                  ${listing.price.toFixed(2)}
+              <div className="flex items-center space-x-4">                <span className="text-3xl font-bold text-blue-600">
+                  ৳{listing.price.toFixed(2)}
                 </span>
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${

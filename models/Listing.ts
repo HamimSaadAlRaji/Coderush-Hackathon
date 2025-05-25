@@ -16,9 +16,12 @@ export interface IListing extends Document {
     condition?: 'new' | 'likeNew' | 'good' | 'fair' | 'poor';
     images: string[];
     sellerId: string;
-    sellerUniversity: string;
-    visibility: 'university' | 'all';
+    sellerUniversity: string;    visibility: 'university' | 'all';
     status: 'active' | 'sold' | 'expired' | 'removed';
+    approvalStatus: 'pending' | 'approved' | 'rejected';
+    approvedBy?: string;
+    approvedAt?: Date;
+    rejectionReason?: string;
     tags?: string[];
     locations?: Array<{
       type: 'Point';
@@ -119,12 +122,30 @@ const ListingSchema = new Schema<IListing>({
     required: true,
     enum: ['university', 'all'],
     default: 'university'
-  },
-  status: { 
+  },  status: { 
     type: String, 
     required: true,
     enum: ['active', 'sold', 'expired', 'removed'],
     default: 'active'
+  },
+  approvalStatus: {
+    type: String,
+    required: true,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  approvedBy: {
+    type: String,
+    required: false
+  },
+  approvedAt: {
+    type: Date,
+    required: false
+  },
+  rejectionReason: {
+    type: String,
+    trim: true,
+    required: false
   },
   tags: [{ 
     type: String,
@@ -140,6 +161,7 @@ ListingSchema.index({ category: 1, subCategory: 1 });
 ListingSchema.index({ sellerId: 1 });
 ListingSchema.index({ sellerUniversity: 1 });
 ListingSchema.index({ status: 1, visibility: 1 });
+ListingSchema.index({ approvalStatus: 1 });
 ListingSchema.index({ createdAt: -1 });
 ListingSchema.index({ 'locations': '2dsphere' });
 
