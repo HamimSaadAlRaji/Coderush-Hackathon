@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI('AIzaSyClKj1FyNEHOklI5kmMMG7k-jVCO_BYUsw');
 
 export interface CategoryExtractionResult {
   category: string;

@@ -24,7 +24,7 @@ export interface ApiResponse {
 }
 
 // Initialize the Google AI client
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // Valid condition values
 const VALID_CONDITIONS: ProductCondition[] = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
@@ -54,7 +54,7 @@ Return your response in this exact JSON format:
 // Helper function to analyze product image
 async function analyzeProductImage(imageUrl: string): Promise<ProductAnalysisResult> {
   // Validate API key
-  if (!process.env.GOOGLE_AI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     throw new Error('Google AI API key not configured');
   }
 
